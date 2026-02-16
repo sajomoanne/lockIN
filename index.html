@@ -3,7 +3,10 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>Lock IN</title>
+<link rel="apple-touch-icon" href="/icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lock-In">
+<title>Lock-In Tool</title>
 <style>
 :root {
   --bg: #111827; --card: #1f2937; --muted: #94a3b8; --accent: #22c55e;
@@ -19,6 +22,21 @@ html, body {
 body { 
   display: flex; justify-content: center; align-items: flex-start; 
   padding: 16px; box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.32;
+  background:
+    radial-gradient(70% 55% at 0% 0%, rgba(0, 0, 0, 0.56), rgba(0, 0, 0, 0)),
+    radial-gradient(70% 55% at 100% 0%, rgba(0, 0, 0, 0.56), rgba(0, 0, 0, 0)),
+    radial-gradient(70% 55% at 0% 100%, rgba(0, 0, 0, 0.56), rgba(0, 0, 0, 0)),
+    radial-gradient(70% 55% at 100% 100%, rgba(0, 0, 0, 0.56), rgba(0, 0, 0, 0));
 }
 
 .app {
@@ -26,26 +44,77 @@ body {
   border-radius: 16px; background: var(--card);
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
   box-sizing: border-box; display: flex; flex-direction: column;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.app::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.28;
+  background:
+    radial-gradient(68% 52% at 0% 0%, rgba(0, 0, 0, 0.48), rgba(0, 0, 0, 0)),
+    radial-gradient(68% 52% at 100% 0%, rgba(0, 0, 0, 0.48), rgba(0, 0, 0, 0)),
+    radial-gradient(68% 52% at 0% 100%, rgba(0, 0, 0, 0.48), rgba(0, 0, 0, 0)),
+    radial-gradient(68% 52% at 100% 100%, rgba(0, 0, 0, 0.48), rgba(0, 0, 0, 0));
+}
+
+.app > * {
+  position: relative;
+  z-index: 1;
 }
 
 .screen { display: none; }
 .screen.active { display: block; }
-.screen-focus.active { display: flex; }
+.screen-focus.active {
+  display: flex;
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  background: var(--bg);
+  padding: 24px 20px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.screen-focus.active::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.28;
+  background:
+    radial-gradient(68% 52% at 0% 0%, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0)),
+    radial-gradient(68% 52% at 100% 0%, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0)),
+    radial-gradient(68% 52% at 0% 100%, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0)),
+    radial-gradient(68% 52% at 100% 100%, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0));
+}
+
+.screen-focus.active > * {
+  position: relative;
+  z-index: 1;
+}
 
 .focus-shell {
   width: 100%;
-  min-height: 72vh;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 28px;
+  gap: 18px;
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
 }
 
 .focus-stack {
   width: 100%;
   max-width: 520px;
-  min-height: 300px;
+  min-height: 320px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -55,32 +124,46 @@ body {
 
 .focus-item {
   text-align: center;
+  border-radius: 22px;
+  padding: 14px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  transform: translate3d(0, 0, 0);
+  will-change: transform, opacity;
   transition: transform 450ms ease, opacity 450ms ease;
 }
 
 .focus-item-prev {
-  opacity: 0.38;
-  transform: translateY(-8px) scale(0.96);
-  font-size: 18px;
+  opacity: 0.4;
+  transform: translate3d(0, -8px, 0);
+  font-size: 15px;
   font-weight: 500;
 }
 
 .focus-item-next {
-  opacity: 0.38;
-  transform: translateY(8px) scale(0.96);
-  font-size: 18px;
-  font-weight: 500;
+  opacity: 0.65;
+  transform: translate3d(0, 8px, 0);
+  font-size: 20px;
+  font-weight: 650;
 }
 
 .focus-item-current {
   opacity: 1;
-  transform: scale(1.03);
+  transform: translate3d(0, 0, 0);
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .focus-current-task {
-  font-size: 34px;
+  font-size: 48px;
   font-weight: 800;
   line-height: 1.1;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .focus-current-timer {
@@ -92,7 +175,7 @@ body {
 
 .focus-item-completing {
   opacity: 0.18;
-  transform: translateY(42px) scale(0.95);
+  transform: translateY(42px);
 }
 
 .focus-actions {
@@ -100,63 +183,99 @@ body {
   max-width: 380px;
   display: flex;
   flex-direction: column;
+  margin-top: 8px;
+  padding-bottom: max(14px, env(safe-area-inset-bottom));
   gap: 12px;
 }
 
 .focus-lock-switch {
   width: 100%;
+  height: 70px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
   cursor: pointer;
+  touch-action: pan-y;
 }
 
 .focus-lock-switch input {
   position: absolute;
   opacity: 0;
-  pointer-events: none;
+  width: 0;
+  height: 0;
 }
 
 .focus-lock-track {
   width: 100%;
-  height: 64px;
+  height: 70px;
   border-radius: 999px;
-  border: 1px solid var(--border);
-  background: #111827;
+  background: #ef4444;
+  border: 1px solid rgba(0, 0, 0, 0.15);
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   position: relative;
-  padding: 0 18px;
-  box-sizing: border-box;
+  transition: background-color 300ms ease-in-out, transform 300ms ease-in-out;
 }
 
 .focus-lock-knob {
   position: absolute;
-  top: 6px;
-  left: 6px;
-  width: 52px;
-  height: 52px;
+  top: 8px;
+  left: 8px;
+  width: 54px;
+  height: 54px;
   border-radius: 999px;
   background: #f8fafc;
-  transition: transform 450ms ease;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28);
+  transition: left 300ms ease-in-out;
 }
 
-.focus-lock-label-on,
-.focus-lock-label-off {
-  position: relative;
-  z-index: 1;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+.focus-lock-icon {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  color: #111827;
+  fill: currentColor;
+  transition: opacity 300ms ease-in-out, transform 300ms ease-in-out;
 }
 
-.focus-lock-label-on { color: #111827; }
-.focus-lock-label-off { color: var(--muted); }
+.focus-lock-icon svg {
+  width: 30px;
+  height: 30px;
+  display: block;
+}
+
+.focus-lock-icon-unlock {
+  right: 20px;
+  opacity: 1;
+  transform: scale(1);
+}
+
+.focus-lock-icon-lock {
+  left: 20px;
+  opacity: 0.25;
+  transform: scale(0.92);
+}
 
 .focus-lock-switch input:checked + .focus-lock-track {
   background: var(--accent);
+  transform: scale(1.01);
 }
 
 .focus-lock-switch input:checked + .focus-lock-track .focus-lock-knob {
-  transform: translateX(calc(100% - 12px));
+  left: calc(100% - 8px - 54px);
+}
+
+.focus-lock-switch input:checked + .focus-lock-track .focus-lock-icon-unlock {
+  opacity: 0.2;
+  transform: scale(0.92);
+}
+
+.focus-lock-switch input:checked + .focus-lock-track .focus-lock-icon-lock {
+  opacity: 1;
+  transform: scale(1);
 }
 
 .focus-complete-wrap {
@@ -171,11 +290,99 @@ body {
 
 .focus-complete-btn {
   width: 100%;
-  padding: 16px;
+  height: 70px;
+  padding: 0 20px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
 }
 
 .focus-manage-btn {
   width: 100%;
+  height: 62px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #111827;
+  color: #f8fafc;
+  transition: opacity 220ms ease-in-out, transform 220ms ease-in-out;
+}
+
+.focus-manage-slot {
+  width: 100%;
+  height: 62px;
+}
+
+.focus-manage-btn.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.focus-manage-btn.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-2px);
+}
+
+.focus-timers {
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+}
+
+.focus-stopwatch-main {
+  margin-top: 0;
+  min-height: 64px;
+  font-size: 64px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.focus-remaining-sub {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.focus-stack.completing .focus-item {
+  transition: transform 300ms ease-in-out;
+}
+
+.focus-item-complete-out {
+  transform: translate3d(0, -78px, 0) scale(0.94);
+}
+
+.focus-item-promote {
+  transform: translate3d(0, -34px, 0) scale(1.06);
+}
+
+.focus-item-shift-up {
+  transform: translate3d(0, -28px, 0);
+}
+
+.focus-item-next-shift {
+  transform: translate3d(0, -28px, 0);
+}
+
+.focus-entry-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 950;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 170ms ease-in-out;
+}
+
+.focus-entry-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 header { display: flex; flex-direction: column; margin-bottom: 24px; }
@@ -196,8 +403,36 @@ input {
   width: 100%; box-sizing: border-box;
 }
 
-.main-add-container { margin-bottom: 24px; }
-.btn-add-task { width: 100%; background: var(--accent); color: #000; font-weight: 700; border: none; }
+.main-add-container {
+  margin-bottom: 16px;
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.btn-add-task {
+  flex: 4 1 0;
+  width: auto;
+  background: var(--accent);
+  color: #000;
+  font-weight: 700;
+  border: none;
+  font-size: 30px;
+  line-height: 1;
+}
+
+.btn-end-icon {
+  flex: 1 1 0;
+  width: auto;
+  border: 1px solid var(--error);
+  color: var(--error);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 800;
+}
 
 .task-list { display: grid; gap: 12px; margin-bottom: 12px; }
 .task {
@@ -207,16 +442,75 @@ input {
   cursor: grab; user-select: none;
 }
 
-.task-content { flex: 1; min-width: 0; overflow-wrap: break-word; }
+.task.task-dragging {
+  opacity: 0.6;
+}
+
+.task-drop-placeholder {
+  height: 64px;
+  border-radius: 12px;
+  border: 1px dashed rgba(148, 163, 184, 0.5);
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.task-content {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
 .task.selected { border: 2px solid var(--accent); box-shadow: 0 0 10px rgba(34, 197, 94, 0.2); }
 .task.done { background: #1f2937; border-color: #374151; color: #64748b; text-decoration: line-through; opacity: 0.7; }
 
-.timer-grid { display: none; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 25px; margin-bottom: 10px; }
-.timer-card { background: var(--glass); padding: 15px; border-radius: 14px; border: 1px solid var(--border); text-align: center; }
+.timer-grid {
+  display: none;
+  margin-top: 18px;
+  margin-bottom: 10px;
+  padding: 0 2px;
+  box-sizing: border-box;
+}
+.timer-info-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--glass);
+  box-sizing: border-box;
+}
+.timer-info-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.timer-info-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.timer-info-divider {
+  color: #64748b;
+  font-size: 16px;
+  line-height: 1;
+}
 .time { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
 
-.actions { display: none; gap: 12px; margin-top: 20px; margin-bottom: 24px;}
-.actions button { flex: 1; padding: 16px; font-size: 18px; }
+.actions {
+  display: flex;
+  gap: 0;
+  margin-top: 14px;
+  margin-bottom: 24px;
+  width: 100%;
+  position: sticky;
+  bottom: 16px;
+  z-index: 2;
+}
+.actions button { width: 100%; flex: none; padding: 16px; font-size: 18px; }
 button.primary { background: var(--accent); border: none; color: #000; font-weight: 700; }
 
 .overlay {
@@ -262,6 +556,244 @@ button.primary { background: var(--accent); border: none; color: #000; font-weig
 .setting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; text-align: left; }
 .setting-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
 
+.editor-time-row {
+  margin: 10px 0 16px 0;
+}
+
+.smart-time-wrap {
+  position: relative;
+}
+
+#smartTimeInput {
+  color: #6b7280;
+  caret-color: #9ca3af;
+  font-size: 28px;
+  font-family: monospace;
+  letter-spacing: 2px;
+  text-align: center;
+  position: relative;
+  background: #111827;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border: 1px solid var(--border);
+  outline: none;
+}
+
+.smart-time-mask {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  font-size: 28px;
+  font-family: monospace;
+  letter-spacing: 2px;
+  line-height: 1;
+}
+
+.smart-time-mask .entered {
+  color: var(--accent);
+}
+
+.smart-time-mask .placeholder {
+  color: transparent;
+}
+
+.editor-split-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.editor-actions-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.editor-actions-row.add-mode {
+  grid-template-columns: 1fr 3fr;
+}
+
+.editor-actions-row.edit-mode {
+  grid-template-columns: 1fr 2fr 1fr;
+}
+
+.editor-actions-row.add-mode .editor-delete-btn {
+  display: none;
+}
+
+.editor-actions-row.edit-mode .editor-delete-btn {
+  display: flex;
+}
+
+.editor-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.editor-confirm-btn {
+  font-weight: 800;
+  min-height: 48px;
+}
+
+#modalTitle {
+  margin-top: 0;
+  margin-bottom: 16px;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-mode-icon {
+  width: 22px;
+  height: 22px;
+  display: block;
+  color: var(--muted);
+}
+
+.editor-delete-btn {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+}
+
+.editor-delete-btn.is-disabled {
+  opacity: 0.4;
+  pointer-events: none;
+  border-color: transparent;
+  color: var(--muted);
+}
+
+.editor-delete-btn.is-enabled {
+  opacity: 1;
+  pointer-events: auto;
+  border-color: #EF4444;
+  color: #EF4444;
+}
+
+.editor-delete-btn.is-enabled:hover {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.ui-icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+#workModeSelect {
+  width: 100%;
+  padding: 10px 34px 10px 12px;
+  border-radius: 10px;
+  background: #111827;
+  color: #fff;
+  border: 1px solid var(--border);
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M6 9l6 6 6-6' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px 14px;
+  outline: none;
+}
+
+#workModeSelect:focus {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+  outline: none;
+}
+
+#workModeSelect:focus-visible {
+  outline: none;
+}
+
+#workModeSelect::-ms-expand {
+  display: none;
+}
+
+* {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+#modalTaskName {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border: 1px solid var(--border);
+  outline: none;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+#modalTaskName:focus,
+#smartTimeInput:focus {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+  outline: none;
+}
+
+#modalTaskName:focus-visible,
+#smartTimeInput:focus-visible {
+  outline: none;
+}
+
+.pulse-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.25);
+  outline: none;
+  margin-top: 8px;
+}
+
+.pulse-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #374151 0%, #22c55e 100%);
+}
+
+.pulse-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #f8fafc;
+  border: 2px solid #22c55e;
+  margin-top: -6px;
+  transition: transform 120ms ease;
+}
+
+.pulse-slider::-webkit-slider-thumb:active {
+  transform: scale(1.08);
+}
+
+.pulse-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #374151 0%, #22c55e 100%);
+}
+
+.pulse-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #f8fafc;
+  border: 2px solid #22c55e;
+}
+
 .toggle-switch {
   position: relative; display: inline-block; width: 50px; height: 26px;
 }
@@ -303,14 +835,19 @@ footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border
 }
 
 #pulsePopup {
-  backdrop-filter: blur(8px);
+  background: rgba(17, 24, 39, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 1800;
 }
 
 #pulseTapCard {
-  width: min(90vw, 420px);
-  height: 200px;
+  width: min(82vw, 320px);
+  height: 160px;
+  position: relative;
+  overflow: hidden;
 
-  border-radius: 28px; /* squarish-round */
+  border-radius: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -324,9 +861,9 @@ footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border
   user-select: none;
 
   transition:
-    background-color 0.8s ease,
-    box-shadow 0.8s ease,
-    transform 0.2s ease;
+    background-color 280ms ease,
+    box-shadow 280ms ease,
+    transform 250ms ease;
 
   box-shadow:
     0 20px 60px rgba(0,0,0,0.6);
@@ -337,25 +874,52 @@ footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border
   transform: scale(1.05);
 }
 
+#pulseFillLayer {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 0%;
+  z-index: 0;
+  background: #22c55e;
+}
+
+#pulseFillLayer.active {
+  animation: pulseFillRise 60s linear forwards;
+}
+
+#pulseTapText {
+  position: relative;
+  z-index: 1;
+}
+
 /* COLOR STATES */
 .pulse-green {
-  background: #22c55e;
   box-shadow: 0 0 60px rgba(34,197,94,0.6);
 }
 
 .pulse-yellow {
-  background: #eab308;
   box-shadow: 0 0 60px rgba(234,179,8,0.6);
 }
 
 .pulse-orange {
-  background: #f97316;
   box-shadow: 0 0 60px rgba(249,115,22,0.6);
 }
 
 .pulse-red {
-  background: #ef4444;
   box-shadow: 0 0 60px rgba(239,68,68,0.6);
+}
+
+@keyframes pulseFillRise {
+  0% {
+    height: 0%;
+    background: #22c55e;
+  }
+  50% {
+    background: #eab308;
+  }
+  100% {
+    height: 100%;
+    background: #ef4444;
+  }
 }
 
 
@@ -375,105 +939,119 @@ footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border
 </head>
 <body>
 
-<div id="welcomeScreen" class="overlay" style="display: flex;">
-  <div class="overlay-card">
-    <div class="hero-title">LOCK-IN</div>
-    <p class="subtitle" style="font-size: 14px; margin-bottom: 30px; line-height: 1.6;">High-integrity performance auditor.<br>Observation mode active.</p>
-    <button onclick="closeWelcome()" class="primary" style="width: 100%; padding: 18px;">Continue</button>
-  </div>
-</div>
-
 <div class="app" id="app">
   <section id="focusScreen" class="screen screen-focus">
     <div class="focus-shell">
       <div id="focusStack" class="focus-stack"></div>
+      <div class="focus-timers">
+        <div id="focusStopwatchMain" class="focus-stopwatch-main">00:00</div>
+        <div id="focusRemainingSub" class="focus-remaining-sub">remaining 00:00</div>
+      </div>
       <div class="focus-actions" id="focusActions">
-        <label class="focus-lock-switch">
+        <div class="focus-lock-switch" id="focusLockSwitch">
           <input type="checkbox" id="focusLockToggle">
           <span class="focus-lock-track">
+            <span class="focus-lock-icon focus-lock-icon-unlock" aria-hidden="true">
+              <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <path d="M50,18A19.9,19.9,0,0,0,30,38v8a8,8,0,0,0-8,8V74a8,8,0,0,0,8,8H70a8,8,0,0,0,8-8V54a8,8,0,0,0-8-8H38V38a12,12,0,0,1,23.6-3,4,4,0,1,0,7.8-2A20.1,20.1,0,0,0,50,18Z"></path>
+              </svg>
+            </span>
+            <span class="focus-lock-icon focus-lock-icon-lock" aria-hidden="true">
+              <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <path d="M30,46V38a20,20,0,0,1,40,0v8a8,8,0,0,1,8,8V74a8,8,0,0,1-8,8H30a8,8,0,0,1-8-8V54A8,8,0,0,1,30,46Zm32-8v8H38V38a12,12,0,0,1,24,0Z" fill-rule="evenodd"></path>
+              </svg>
+            </span>
             <span class="focus-lock-knob"></span>
-            <span class="focus-lock-label-on">LOCK</span>
-            <span class="focus-lock-label-off">UNLOCK</span>
           </span>
-        </label>
+        </div>
         <div id="focusCompleteWrap" class="focus-complete-wrap">
           <button id="focusCompleteBtn" class="primary focus-complete-btn">Complete Task</button>
         </div>
-        <div id="focusManageSlot"></div>
+        <div id="focusManageSlot" class="focus-manage-slot">
+          <button id="focusManageBtn" class="focus-manage-btn is-visible">Manage</button>
+        </div>
       </div>
     </div>
   </section>
 
   <section id="manageScreen" class="screen screen-manage active">
-    <header>
-      <h1>🔒 Lock-In Tool</h1>
-      <div class="subtitle">v4.6 [Integrity Engine]</div>
-    </header>
-
     <div class="main-add-container" id="addWrapper">
-      <button class="btn-add-task" id="openAddModalBtn">+ Add New Task</button>
+      <button class="btn-add-task" id="openAddModalBtn">+</button>
+      <button id="endSessionBtn" class="btn-end-icon" aria-label="end session">
+        <svg class="ui-icon" viewBox="0 0 600 600" fill="currentColor" aria-hidden="true">
+          <path d="M130 0C58.672245 0 0 58.672245 0 130L0 470C0 541.32776 58.672245 600 130 600L301.57812 600C367.83331 600 423.13643 549.36696 430.67188 485L349.43555 485C343.32179 505.66026 324.7036 520 301.57812 520L130 520C101.60826 520 80 498.39174 80 470L80 130C80 101.60826 101.60826 80 130 80L301.57812 80C324.7036 80 343.32179 94.339739 349.43555 115L430.67188 115C423.13642 50.633038 367.83331 0 301.57812 0L130 0Z"></path>
+          <path d="M476.86328 179.99911A40 40 0 0 0 448.57812 191.71395A40 40 0 0 0 448.57812 248.28427L460.29297 259.99911H163.72656A40 40 0 0 0 123.72656 299.99911A40 40 0 0 0 163.72656 339.99911H460.29297L448.57812 351.71395A40 40 0 0 0 448.57812 408.28427A40 40 0 0 0 505.14844 408.28427L577.93945 335.49325A40 40 0 0 0 600 299.99911A40 40 0 0 0 577.5293 264.09481L505.14844 191.71395A40 40 0 0 0 476.86328 179.99911Z"></path>
+        </svg>
+      </button>
     </div>
 
     <div id="taskList" class="task-list"></div>
 
     <div id="timerGrid" class="timer-grid">
-      <div class="timer-card">
-        <div id="currentTaskDisplay" style="font-size: 12px; color: var(--muted); margin-bottom: 5px;">No task</div>
-        <div class="time" id="countdown">00:00:00</div>
+      <div class="timer-info-row">
+        <div class="timer-info-item">
+          <div class="timer-info-label">Remaining Time</div>
+          <div class="time" id="countdown">00:00:00</div>
+        </div>
+        <div class="timer-info-divider">|</div>
+        <div class="timer-info-item">
+          <div class="timer-info-label">Time Spent</div>
+          <div class="time" id="stopwatch">00:00:00</div>
+        </div>
       </div>
-      <div class="timer-card">
-        <div id="stateText" style="font-size: 12px; color: var(--muted); margin-bottom: 5px;">Idle</div>
-        <div class="time" id="stopwatch">00:00:00</div>
-      </div>
+      <div id="stateText" style="display:none;">Idle</div>
     </div>
 
     <div class="actions" id="actionButtons">
-      <button id="startBtn" class="primary">Start</button>
-      <button id="completeBtn">log task</button>
+      <button id="startBtn" class="primary">enter session</button>
     </div>
 
-    <button id="endSessionBtn" style="display:none; margin-top: 12px; border-color: var(--error); color: var(--error); width: 100%;">End Session Early</button>
-
-    <footer>by sajo moanne</footer>
   </section>
 </div>
+
+<div id="focusEntryOverlay" class="focus-entry-overlay"></div>
 
 <!-- Task Modal -->
 <div id="taskEditorOverlay" class="overlay">
   <div class="overlay-card">
-    <h3 id="modalTitle" style="margin-top:0; margin-bottom:16px;">Task Details</h3>
+    <h3 id="modalTitle"></h3>
     <input id="modalTaskName" type="text" placeholder="task name">
-    
-    <div class="smart-picker">
-      <div class="setting-label" style="margin-bottom: 8px;">Estimate (HH:MM:SS)</div>
-      <input id="smartTimeInput" type="text" value="00:00:00" maxlength="8">
-    </div>
 
-    <!-- Mode Switch -->
-    <div class="setting-row" style="flex-direction:column; align-items:flex-start;">
-      <div class="setting-label">Work Mode</div>
-      <select id="workModeSelect" style="width:100%; padding:12px; border-radius:10px; background:#111827; color:#fff; border:1px solid var(--border);">
-        <option value="">Blank</option>
-        <option value="ONLINE">Online</option>
-        <option value="OFFLINE">Offline</option>
-      </select>
-    </div>
-
-    <!-- Pulse Slider -->
-    <div class="setting-row" style="flex-direction: column; align-items: flex-start;">
-      <div class="setting-label">Pulse Frequency: <span id="pulseDisplay" style="color:var(--accent)">15m</span></div>
-      <input type="range" id="pulseRange" class="range-picker" min="0" max="30" step="5" value="15">
-      <div style="width:100%; display:flex; justify-content:space-between; font-size:10px; color:var(--muted)">
-        <span>OFF</span><span>15m</span><span>30m</span>
+    <div class="editor-time-row">
+      <div class="setting-label" style="margin-bottom: 8px;">est. (hh:mm:ss)</div>
+      <div class="smart-time-wrap">
+        <input id="smartTimeInput" type="text" value="00:00:00" maxlength="8">
+        <div id="smartTimeMask" class="smart-time-mask" aria-hidden="true"></div>
       </div>
     </div>
 
-    <div style="display:flex; flex-direction: column; gap: 10px; margin-top: 20px;">
-      <div style="display:flex; gap:10px;">
-        <button id="cancelEditor" style="flex:1; background:#374151; border:none;">Cancel</button>
-        <button id="saveTaskBtn" style="flex:1; background:var(--accent); color:#000; border:none; font-weight: 700;">Confirm</button>
+    <div class="editor-split-row">
+      <div class="setting-row" style="flex-direction:column; align-items:flex-start; margin-bottom:0;">
+        <div class="setting-label">Pulse Frequency: <span id="pulseRangeLabel" style="color:var(--accent)">OFF</span></div>
+        <input id="pulseRange" class="pulse-slider" type="range" min="0" max="15" step="1" value="0">
       </div>
-      <button id="deleteTaskBtn" style="background:transparent; color:var(--error); border:1px solid var(--error); font-size: 14px; display: none;">Delete Task</button>
+      <div class="setting-row" style="flex-direction:column; align-items:flex-start; margin-bottom:0;">
+        <div class="setting-label">Work Mode</div>
+        <select id="workModeSelect">
+          <option value="">Blank</option>
+          <option value="ONLINE">Online</option>
+          <option value="OFFLINE">Offline</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="editor-actions-row add-mode" id="editorActionsRow">
+      <button id="cancelEditor" class="editor-icon-btn" style="background:#374151; border:none;" aria-label="cancel">
+        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </button>
+      <button id="saveTaskBtn" class="editor-confirm-btn" style="background:var(--accent); color:#000; border:none;">Confirm</button>
+      <button id="deleteTaskBtn" class="editor-icon-btn editor-delete-btn is-disabled" aria-label="delete">
+        <svg class="ui-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M18 6L17.1991 18.0129C17.129 19.065 17.0939 19.5911 16.8667 19.99C16.6666 20.3412 16.3648 20.6235 16.0011 20.7998C15.588 21 15.0607 21 14.0062 21H9.99377C8.93927 21 8.41202 21 7.99889 20.7998C7.63517 20.6235 7.33339 20.3412 7.13332 19.99C6.90607 19.5911 6.871 19.065 6.80086 18.0129L6 6M4 6H20M16 6L15.7294 5.18807C15.4671 4.40125 15.3359 4.00784 15.0927 3.71698C14.8779 3.46013 14.6021 3.26132 14.2905 3.13878C13.9376 3 13.523 3 12.6936 3H11.3064C10.477 3 10.0624 3 9.70951 3.13878C9.39792 3.26132 9.12208 3.46013 8.90729 3.71698C8.66405 4.00784 8.53292 4.40125 8.27064 5.18807L8 6M14 10V17M10 10V17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </button>
     </div>
   </div>
 </div>
@@ -551,7 +1129,10 @@ footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border
       </thead>
       <tbody></tbody>
     </table>
-    <button id="confirmTaskTimelineBtn" class="primary" style="width:100%; margin-top:15px;">Confirm</button>
+    <div style="display:flex; gap:10px; margin-top:15px;">
+      <button id="backTaskTimelineBtn" style="flex:1; background:#374151; border:none;">Back</button>
+      <button id="confirmTaskTimelineBtn" class="primary" style="flex:1;">Confirm</button>
+    </div>
   </div>
 </div>
 
@@ -565,7 +1146,8 @@ footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border
     cursor: pointer;
     user-select: none;
   ">
-    YOU THERE?
+    <div id="pulseFillLayer"></div>
+    <span id="pulseTapText">YOU THERE?</span>
   </div>
 </div>
 
@@ -573,6 +1155,7 @@ footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border
 let tasks = [], current = null, paused = true, tick = null;
 let sessionStartTimestamp = null, sessionEndTimestamp = null;
 let totalFocusedSeconds = 0, editingIndex = null;
+let sessionActive = false, taskRunning = false;
 
 // ==== PULSE SYSTEM STATE (ADDITIVE) ====
 let pulseTimer = null;
@@ -586,6 +1169,23 @@ let lastTickAt = null;
 let uiScreen = 'manage';
 let completionInFlight = false;
 const FOCUS_COMPLETE_ANIM_MS = 450;
+let focusEntryInFlight = false;
+let timelineMode = 'view';
+let timelineTaskIndex = null;
+let completionPendingEndEntry = null;
+let completionPendingEndTaskIndex = null;
+let suppressTaskClick = false;
+const dragState = {
+  active: false,
+  fromIndex: null,
+  placeholder: null,
+  draggedRow: null,
+  pointerActive: false,
+  pointerId: null,
+  moved: false,
+  startX: 0,
+  startY: 0
+};
 
 const $ = id => document.getElementById(id);
 
@@ -593,7 +1193,7 @@ function setScreen(mode) {
   const focus = $('focusScreen');
   const manage = $('manageScreen');
   if (!focus || !manage) return;
-  const target = paused === false ? 'focus' : mode;
+  const target = taskRunning ? 'focus' : mode;
   uiScreen = target === 'focus' ? 'focus' : 'manage';
   focus.classList.remove('active');
   manage.classList.remove('active');
@@ -604,12 +1204,34 @@ function setScreen(mode) {
   }
 }
 
-function syncScreenRoute() {
-  if (paused === false) {
+function beginFocusEntryTransition() {
+  if (focusEntryInFlight) return;
+  const overlay = $('focusEntryOverlay');
+  if (!overlay) {
     setScreen('focus');
     return;
   }
-  if (!sessionStartTimestamp) {
+  focusEntryInFlight = true;
+  overlay.classList.add('active');
+  setTimeout(() => {
+    setScreen('focus');
+    overlay.classList.remove('active');
+  }, 170);
+  setTimeout(() => {
+    focusEntryInFlight = false;
+  }, 350);
+}
+
+function syncScreenRoute() {
+  if (taskRunning) {
+    if (uiScreen !== 'focus') {
+      beginFocusEntryTransition();
+      return;
+    }
+    setScreen('focus');
+    return;
+  }
+  if (!sessionActive) {
     setScreen('manage');
     return;
   }
@@ -627,9 +1249,200 @@ function clearPulseForTransition() {
     if (activePulse.timeout) { clearTimeout(activePulse.timeout); activePulse.timeout = null; }
     if (activePulse.colorTimer) { clearInterval(activePulse.colorTimer); activePulse.colorTimer = null; }
   }
+  $('pulseFillLayer')?.classList.remove('active');
   activePulse = null;
   $('pulsePopup').style.display = 'none';
   $('app')?.classList.remove('blurred');
+}
+
+function resetPulseScheduler() {
+  if (pulseTimer) {
+    clearInterval(pulseTimer);
+    pulseTimer = null;
+  }
+}
+
+function startPulseScheduler() {
+  resetPulseScheduler();
+  if (activePulse && activePulse.timeout) { clearTimeout(activePulse.timeout); activePulse.timeout = null; }
+  if (!sessionActive || !taskRunning || current === null || !tasks[current]) return;
+  const pulseMinutes = parseInt(tasks[current].pulse, 10) || 0;
+  if (pulseMinutes < 5) return;
+  pulseTimer = setInterval(() => {
+    if (!sessionActive || !taskRunning || current === null || !tasks[current]) return;
+    firePulse(tasks[current]);
+  }, pulseMinutes * 60 * 1000);
+}
+
+function getDragPlaceholder() {
+  if (!dragState.placeholder) {
+    const ph = document.createElement('div');
+    ph.className = 'task-drop-placeholder';
+    dragState.placeholder = ph;
+  }
+  return dragState.placeholder;
+}
+
+function placeDragPlaceholder(targetRow, placeAfter) {
+  const placeholder = getDragPlaceholder();
+  if (!targetRow || !targetRow.parentElement) return;
+  const parent = targetRow.parentElement;
+  if (placeAfter) {
+    parent.insertBefore(placeholder, targetRow.nextSibling);
+  } else {
+    parent.insertBefore(placeholder, targetRow);
+  }
+}
+
+function clearDragVisuals() {
+  if (dragState.placeholder && dragState.placeholder.parentElement) {
+    dragState.placeholder.parentElement.removeChild(dragState.placeholder);
+  }
+  if (dragState.draggedRow) {
+    dragState.draggedRow.classList.remove('task-dragging');
+  }
+}
+
+function commitTaskReorder(fromIndex, toIndex) {
+  if (fromIndex === null || toIndex === null) return;
+  if (fromIndex < 0 || fromIndex >= tasks.length) return;
+  if (toIndex < 0) toIndex = 0;
+  if (toIndex > tasks.length - 1) toIndex = tasks.length - 1;
+  if (fromIndex === toIndex) return;
+
+  const activeTaskRef = current !== null ? tasks[current] : null;
+  const [moved] = tasks.splice(fromIndex, 1);
+  tasks.splice(toIndex, 0, moved);
+
+  if (activeTaskRef) {
+    current = tasks.indexOf(activeTaskRef);
+  }
+}
+
+function resolveDropIndex() {
+  const list = $('taskList');
+  const placeholder = dragState.placeholder;
+  if (!list || !placeholder || !placeholder.parentElement) return dragState.fromIndex;
+  const children = Array.from(list.children);
+  const placeholderPos = children.indexOf(placeholder);
+  if (placeholderPos === -1) return dragState.fromIndex;
+
+  let index = 0;
+  for (let i = 0; i < placeholderPos; i++) {
+    const el = children[i];
+    if (el.classList.contains('task') && !el.classList.contains('task-dragging')) {
+      index++;
+    }
+  }
+  return index;
+}
+
+function resetDragState() {
+  clearDragVisuals();
+  dragState.active = false;
+  dragState.fromIndex = null;
+  dragState.draggedRow = null;
+  dragState.pointerActive = false;
+  dragState.pointerId = null;
+  dragState.moved = false;
+}
+
+function finalizeDragDrop() {
+  if (!dragState.active || dragState.fromIndex === null) {
+    resetDragState();
+    return;
+  }
+  const dropIndex = resolveDropIndex();
+  const from = dragState.fromIndex;
+  resetDragState();
+  commitTaskReorder(from, dropIndex);
+  render();
+}
+
+function onTaskDragStart(e, index, row) {
+  if (!paused) {
+    e.preventDefault();
+    return;
+  }
+  dragState.active = true;
+  dragState.fromIndex = index;
+  dragState.draggedRow = row;
+  row.classList.add('task-dragging');
+  if (e.dataTransfer) {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(index));
+  }
+}
+
+function onTaskDragOver(e, row) {
+  if (!dragState.active || !row || row === dragState.draggedRow) return;
+  e.preventDefault();
+  const rect = row.getBoundingClientRect();
+  const placeAfter = (e.clientY - rect.top) > rect.height / 2;
+  placeDragPlaceholder(row, placeAfter);
+}
+
+function onTaskDrop(e, row) {
+  if (!dragState.active) return;
+  e.preventDefault();
+  if (row && row !== dragState.draggedRow) {
+    const rect = row.getBoundingClientRect();
+    const placeAfter = (e.clientY - rect.top) > rect.height / 2;
+    placeDragPlaceholder(row, placeAfter);
+  }
+  finalizeDragDrop();
+}
+
+function onTaskDragEnd() {
+  finalizeDragDrop();
+}
+
+function onTouchPointerMove(e) {
+  if (!dragState.pointerActive || e.pointerId !== dragState.pointerId) return;
+  const dx = e.clientX - dragState.startX;
+  const dy = e.clientY - dragState.startY;
+  if (!dragState.moved && Math.hypot(dx, dy) < 8) return;
+
+  dragState.moved = true;
+  dragState.active = true;
+  suppressTaskClick = true;
+  if (dragState.draggedRow) dragState.draggedRow.classList.add('task-dragging');
+
+  const el = document.elementFromPoint(e.clientX, e.clientY);
+  const row = el ? el.closest('.task') : null;
+  if (row && row !== dragState.draggedRow) {
+    const rect = row.getBoundingClientRect();
+    const placeAfter = (e.clientY - rect.top) > rect.height / 2;
+    placeDragPlaceholder(row, placeAfter);
+  }
+  e.preventDefault();
+}
+
+function onTouchPointerEnd(e) {
+  if (!dragState.pointerActive || e.pointerId !== dragState.pointerId) return;
+  document.removeEventListener('pointermove', onTouchPointerMove, { passive: false });
+  document.removeEventListener('pointerup', onTouchPointerEnd);
+  document.removeEventListener('pointercancel', onTouchPointerEnd);
+  if (dragState.moved) {
+    finalizeDragDrop();
+  } else {
+    resetDragState();
+  }
+}
+
+function onTaskPointerDown(e, index, row) {
+  if (!paused) return;
+  if (e.pointerType === 'mouse') return;
+  dragState.pointerActive = true;
+  dragState.pointerId = e.pointerId;
+  dragState.fromIndex = index;
+  dragState.draggedRow = row;
+  dragState.startX = e.clientX;
+  dragState.startY = e.clientY;
+  dragState.moved = false;
+  document.addEventListener('pointermove', onTouchPointerMove, { passive: false });
+  document.addEventListener('pointerup', onTouchPointerEnd);
+  document.addEventListener('pointercancel', onTouchPointerEnd);
 }
 
 const fmt = (s) => {
@@ -641,29 +1454,64 @@ const fmt = (s) => {
 
 // Modal UI Logic
 
-$('pulseRange').oninput = (e) => {
-  const v = parseInt(e.target.value);
-  $('pulseDisplay').textContent = v === 0 ? 'OFF' : v + 'm';
-};
+let smartTypedDigits = '';
+const modalAddIcon = '<svg class="modal-mode-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+const modalEditIcon = '<svg class="modal-mode-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 20h4l10-10-4-4L4 16v4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="m12 6 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+
+function setSmartMaskFromDigits() {
+  const full = smartTypedDigits.padStart(6, '0').slice(-6);
+  const enteredCount = smartTypedDigits.length;
+  const enteredFrom = 6 - enteredCount;
+  const isDigitEntered = (digitIdx) => enteredCount > 0 && digitIdx >= enteredFrom;
+  const isColonEntered = (colonPos) => {
+    if (colonPos === 2) return enteredCount >= 4;
+    return enteredCount >= 2;
+  };
+  const chars = [
+    { ch: full[0], entered: isDigitEntered(0) },
+    { ch: full[1], entered: isDigitEntered(1) },
+    { ch: ':', entered: isColonEntered(2) },
+    { ch: full[2], entered: isDigitEntered(2) },
+    { ch: full[3], entered: isDigitEntered(3) },
+    { ch: ':', entered: isColonEntered(5) },
+    { ch: full[4], entered: isDigitEntered(4) },
+    { ch: full[5], entered: isDigitEntered(5) }
+  ];
+  $('smartTimeMask').innerHTML = chars.map(c => `<span class="${c.entered ? 'entered' : 'placeholder'}">${c.ch}</span>`).join('');
+  $('smartTimeInput').value = `${full.slice(0, 2)}:${full.slice(2, 4)}:${full.slice(4, 6)}`;
+}
+
+function setPulseRangeLabel() {
+  const v = parseInt($('pulseRange').value, 10) || 0;
+  $('pulseRangeLabel').textContent = v < 5 ? 'OFF' : `${v}m`;
+}
+
+$('pulseRange').oninput = setPulseRangeLabel;
 
 // Smart Input
 const timeInput = $('smartTimeInput');
 timeInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Backspace') {
-        e.preventDefault();
-        let val = timeInput.value.replace(/\D/g, '').slice(0, -1).padStart(6, '0');
-        updateTimeDisplay(val);
-    } else if (/^\d$/.test(e.key)) {
-        e.preventDefault();
-        let val = (timeInput.value.replace(/\D/g, '') + e.key).slice(-6);
-        updateTimeDisplay(val);
-    } else if (e.key !== 'Tab') { e.preventDefault(); }
+  if (e.key === 'Backspace') {
+    e.preventDefault();
+    smartTypedDigits = smartTypedDigits.slice(0, -1);
+    setSmartMaskFromDigits();
+  } else if (/^\d$/.test(e.key)) {
+    e.preventDefault();
+    if (smartTypedDigits.length < 6) {
+      smartTypedDigits += e.key;
+      setSmartMaskFromDigits();
+    }
+  } else if (e.key !== 'Tab') {
+    e.preventDefault();
+  }
 });
 
-function updateTimeDisplay(digits) {
-    const h = digits.slice(0, 2), m = digits.slice(2, 4), s = digits.slice(4, 6);
-    timeInput.value = `${h}:${m}:${s}`;
-}
+timeInput.addEventListener('focus', () => {
+  const len = timeInput.value.length;
+  timeInput.setSelectionRange(len, len);
+});
+setSmartMaskFromDigits();
+setPulseRangeLabel();
 
 function timeToSeconds(str) {
   const p = str.split(':').map(x => parseInt(x) || 0);
@@ -689,15 +1537,6 @@ function openSheet(type) {
   toggleSheet();
 }
 
-/// CLOSE WELCOME FUNCTION ///
-
-function closeWelcome() {
-  $('welcomeScreen').style.display = 'none'; 
-  if ("Notification" in window && Notification.permission === "default") {
-    Notification.requestPermission();
-  }
-}
-
 function closeConfirm() { $('confirmEndOverlay').style.display = 'none'; }
 
 
@@ -707,21 +1546,141 @@ $('endSessionBtn').onclick = () => {
 };
 $('confirmEndBtn').onclick = () => { closeConfirm(); endSession(); };
 
-$('focusLockToggle').onchange = (e) => {
-  const wantsLocked = e.target.checked;
+function startTaskRun() {
+  if (current === null || !tasks[current]) return;
+  if (!paused) return;
+  sessionActive = true;
+  taskRunning = true;
+  paused = false;
+  $('stateText').textContent = 'Running';
+  if (!sessionStartTimestamp) sessionStartTimestamp = Date.now();
+
+  if (!tasks[current].log.length) {
+    tasks[current].log.push({ type: 'START', time: Date.now() });
+  } else {
+    tasks[current].log.push({ type: 'RESUME', time: Date.now() });
+  }
+  lastTickAt = Date.now();
+  tick = setInterval(() => {
+    tasks[current].spent++;
+    totalFocusedSeconds++;
+    $('countdown').textContent = fmt(Math.max(0, tasks[current].est - tasks[current].spent));
+    $('stopwatch').textContent = fmt(tasks[current].spent);
+    const focusStop = $('focusStopwatchMain');
+    const focusRem = $('focusRemainingSub');
+    if (focusStop && taskRunning) {
+      focusStop.textContent = $('stopwatch').textContent;
+    }
+    if (focusRem) {
+      focusRem.textContent = `remaining ${$('countdown').textContent}`;
+    }
+  }, 1000);
+  startPulseScheduler();
+  if (tasks[current].pauseStartedAt) {
+    tasks[current].pauses += Math.floor(
+      (Date.now() - tasks[current].pauseStartedAt) / 1000
+    );
+    tasks[current].pauseStartedAt = null;
+  }
+  render();
+}
+
+function pauseTaskRun() {
+  if (current === null || paused) return;
+  taskRunning = false;
+  paused = true;
+  clearInterval(tick);
+  $('stateText').textContent = 'Paused';
+  tasks[current].log.push({ type: 'PAUSE', time: Date.now() });
+  tasks[current].pauseStartedAt = Date.now();
+  clearPulseForTransition();
+  render();
+}
+
+const lockSwipe = {
+  active: false,
+  pointerId: null,
+  startX: 0,
+  startLeft: 0
+};
+
+function getLockParts() {
+  const wrap = $('focusLockSwitch');
+  if (!wrap) return null;
+  const track = wrap.querySelector('.focus-lock-track');
+  const knob = wrap.querySelector('.focus-lock-knob');
+  const input = $('focusLockToggle');
+  if (!track || !knob || !input) return null;
+  const min = 8;
+  const max = track.clientWidth - knob.offsetWidth - 8;
+  return { wrap, track, knob, input, min, max };
+}
+
+function onLockPointerDown(e) {
+  const parts = getLockParts();
+  if (!parts) return;
+  if (!e.target.closest('.focus-lock-track')) return;
+  lockSwipe.active = true;
+  lockSwipe.pointerId = e.pointerId;
+  lockSwipe.startX = e.clientX;
+  lockSwipe.startLeft = parseFloat(getComputedStyle(parts.knob).left) || (parts.input.checked ? parts.max : parts.min);
+  parts.knob.style.transition = 'none';
+  parts.wrap.setPointerCapture(e.pointerId);
+  e.preventDefault();
+}
+
+function onLockPointerMove(e) {
+  if (!lockSwipe.active || e.pointerId !== lockSwipe.pointerId) return;
+  const parts = getLockParts();
+  if (!parts) return;
+  const dx = e.clientX - lockSwipe.startX;
+  const left = Math.max(parts.min, Math.min(parts.max, lockSwipe.startLeft + dx));
+  parts.knob.style.left = `${left}px`;
+  e.preventDefault();
+}
+
+function onLockPointerEnd(e) {
+  if (!lockSwipe.active || e.pointerId !== lockSwipe.pointerId) return;
+  const parts = getLockParts();
+  lockSwipe.active = false;
+  lockSwipe.pointerId = null;
+  if (!parts) return;
+  parts.wrap.releasePointerCapture(e.pointerId);
+  parts.knob.style.transition = '';
+
+  const dx = e.clientX - lockSwipe.startX;
+  const swipeThreshold = Math.max(24, (parts.max - parts.min) * 0.18);
+  const committed = Math.abs(dx) >= swipeThreshold;
+  const wantsLocked = committed ? dx > 0 : parts.input.checked;
+  parts.knob.style.left = '';
+
   if (wantsLocked && paused) {
-    $('startBtn').onclick();
+    startTaskRun();
     return;
   }
   if (!wantsLocked && !paused) {
-    $('startBtn').onclick();
+    pauseTaskRun();
     return;
   }
   render();
-};
+}
+
+$('focusLockSwitch')?.addEventListener('pointerdown', onLockPointerDown);
+document.addEventListener('pointermove', onLockPointerMove, { passive: false });
+document.addEventListener('pointerup', onLockPointerEnd);
+document.addEventListener('pointercancel', onLockPointerEnd);
 
 $('focusCompleteBtn').onclick = () => {
   completeTaskWithFocusAnimation();
+};
+
+$('focusManageBtn').onclick = () => {
+  if (taskRunning) {
+    setScreen('focus');
+  } else {
+    setScreen('manage');
+  }
+  render();
 };
 
 
@@ -730,8 +1689,13 @@ $('focusCompleteBtn').onclick = () => {
 function firePulse(task) {
   const now = Date.now();
 
-  if (paused) return;
+  if (!sessionActive || !taskRunning || paused) return;
   if (isOverlayVisible('confirmEndOverlay') || isOverlayVisible('taskTimelineOverlay') || isOverlayVisible('resultsOverlay')) return;
+  if (activePulse && activePulse.answered) {
+    if (activePulse.timeout) { clearTimeout(activePulse.timeout); activePulse.timeout = null; }
+    if (activePulse.colorTimer) { clearInterval(activePulse.colorTimer); activePulse.colorTimer = null; }
+    activePulse = null;
+  }
   if (activePulse && !activePulse.answered) {
     return; // don't stack pulses
   }
@@ -784,8 +1748,14 @@ function firePulse(task) {
 function showPulsePopup(pulseEntry) {
   const popup = $('pulsePopup');
   const card = $('pulseTapCard');
+  const fillLayer = $('pulseFillLayer');
 
   popup.style.display = 'flex';
+  if (fillLayer) {
+    fillLayer.classList.remove('active');
+    void fillLayer.offsetWidth;
+    fillLayer.classList.add('active');
+  }
 
   const pulseStart = pulseEntry.time;
 
@@ -810,7 +1780,7 @@ function updatePulseColor(startTime) {
   const elapsed = Math.floor((Date.now() - startTime) / 1000);
   const card = $('pulseTapCard');
 
-  card.className = ''; // reset
+  card.classList.remove('pulse-green', 'pulse-yellow', 'pulse-orange', 'pulse-red');
 
   if (elapsed < 10) {
     card.classList.add('pulse-green');
@@ -838,7 +1808,9 @@ function answerPulse(pulseEntry) {
   }
 
   $('pulsePopup').style.display = 'none';
+  $('pulseFillLayer')?.classList.remove('active');
   $('app')?.classList.remove('blurred');
+  startPulseScheduler();
 }
 
 /// FAIL PULSE FUNCTION ///
@@ -863,13 +1835,19 @@ function failPulse(pulseEntry) {
 
   // close popup + unblur if visible
   $('pulsePopup').style.display = 'none';
+  $('pulseFillLayer')?.classList.remove('active');
   $('app')?.classList.remove('blurred');
+  startPulseScheduler();
 }
 
-function focusTimerText() {
-  if (paused === true) return '00:00';
+function focusStopwatchText() {
   if (current === null || !tasks[current]) return '00:00';
-  return $('countdown').textContent || '00:00';
+  return $('stopwatch').textContent || fmt(tasks[current].spent);
+}
+
+function focusRemainingText() {
+  if (current === null || !tasks[current]) return '00:00';
+  return $('countdown').textContent || fmt(Math.max(0, tasks[current].est - tasks[current].spent));
 }
 
 function renderFocusStack() {
@@ -879,10 +1857,7 @@ function renderFocusStack() {
   if (tasks.length === 0 || current === null || !tasks[current]) {
     const empty = document.createElement('div');
     empty.className = 'focus-item focus-item-current';
-    empty.innerHTML = `
-      <div class="focus-current-task">No Active Task</div>
-      <div class="focus-current-timer">00:00</div>
-    `;
+    empty.innerHTML = `<div class="focus-current-task">No Active Task</div>`;
     stack.appendChild(empty);
     return;
   }
@@ -898,10 +1873,7 @@ function renderFocusStack() {
   const currentRow = document.createElement('div');
   currentRow.className = 'focus-item focus-item-current';
   currentRow.dataset.taskIndex = String(current);
-  currentRow.innerHTML = `
-    <div class="focus-current-task">${tasks[current].text}</div>
-    <div class="focus-current-timer">${focusTimerText()}</div>
-  `;
+  currentRow.innerHTML = `<div class="focus-current-task">${tasks[current].text}</div>`;
   stack.appendChild(currentRow);
 
   const endNext = Math.min(tasks.length - 1, current + 2);
@@ -914,81 +1886,116 @@ function renderFocusStack() {
 }
 
 function renderFocusActions() {
-  $('focusLockToggle').checked = paused === false;
+  $('focusLockToggle').checked = taskRunning === true;
   $('focusLockToggle').disabled = current === null;
   $('focusCompleteBtn').disabled = current === null || completionInFlight;
 
-  const manageSlot = $('focusManageSlot');
-  manageSlot.innerHTML = '';
-  if (paused === true) {
-    const manageBtn = document.createElement('button');
-    manageBtn.id = 'focusManageBtn';
-    manageBtn.className = 'focus-manage-btn';
-    manageBtn.textContent = 'Manage';
-    manageBtn.onclick = () => {
-      if (paused === false) {
-        setScreen('focus');
-      } else {
-        setScreen('manage');
-      }
-      render();
-    };
-    manageSlot.appendChild(manageBtn);
-  }
+  const manageBtn = $('focusManageBtn');
+  if (!manageBtn) return;
+  const visible = paused === true;
+  manageBtn.classList.toggle('is-visible', visible);
+  manageBtn.classList.toggle('is-hidden', !visible);
 }
 
 function completeTaskFlow() {
-  if (current === null) {
-    completionInFlight = false;
-    $('focusCompleteWrap')?.classList.remove('focus-complete-firing');
-    return;
+  if (current === null) return;
+
+  if (!paused) {
+    taskRunning = false;
+    paused = true;
+    clearInterval(tick);
+    $('stateText').textContent = 'Paused';
   }
 
-  if (!paused) {paused = true;clearInterval(tick);}
-
   clearPulseForTransition();
-  tasks[current].log.push({ type: 'END', time: Date.now() });
-  const completedTaskIndex = current;
+  const activeTask = tasks[current];
+  if (completionPendingEndEntry && completionPendingEndTaskIndex === current) {
+    const endIdx = activeTask.log.indexOf(completionPendingEndEntry);
+    if (endIdx !== -1) {
+      delete activeTask.log[endIdx].pendingComplete;
+    } else {
+      activeTask.log.push({ type: 'END', time: Date.now() });
+    }
+  } else {
+    activeTask.log.push({ type: 'END', time: Date.now() });
+  }
+  completionPendingEndEntry = null;
+  completionPendingEndTaskIndex = null;
   tasks[current].done = true;
 
-  clearInterval(pulseTimer);
-  pulseTimer = null;
+  resetPulseScheduler();
 
   if (tasks.every(t => t.done)) {
     pendingSessionEnd = true;
   }
-  openTaskTimeline(completedTaskIndex);
+
+  const next = tasks.findIndex(t => !t.done);
+  current = next !== -1 ? next : null;
+  completionInFlight = false;
+  $('focusCompleteWrap')?.classList.remove('focus-complete-firing');
+
+  render();
+
+  if (pendingSessionEnd) {
+    pendingSessionEnd = false;
+    endSession();
+  }
+}
+
+function animateStackCompletionAndCommit() {
+  const stack = $('focusStack');
+  const currentItem = stack ? stack.querySelector('.focus-item-current') : null;
+  const nextItems = stack ? Array.from(stack.querySelectorAll('.focus-item-next')) : [];
+  const nextItem = nextItems.length ? nextItems[0] : null;
+  const trailingNextItems = nextItems.slice(1);
+  const prevItems = stack ? stack.querySelectorAll('.focus-item-prev') : [];
+
+  if (!stack || !currentItem) {
+    completeTaskFlow();
+    return;
+  }
+
+  let finished = false;
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    stack.classList.remove('completing');
+    currentItem.classList.remove('focus-item-complete-out');
+    if (nextItem) nextItem.classList.remove('focus-item-promote');
+    prevItems.forEach(el => el.classList.remove('focus-item-shift-up'));
+    trailingNextItems.forEach(el => el.classList.remove('focus-item-next-shift'));
+    completeTaskFlow();
+  };
+
+  const onTransitionEnd = (e) => {
+    if (e.target !== currentItem || e.propertyName !== 'transform') return;
+    finish();
+  };
+
+  currentItem.addEventListener('transitionend', onTransitionEnd, { once: true });
+  stack.classList.add('completing');
+  currentItem.classList.add('focus-item-complete-out');
+  if (nextItem) nextItem.classList.add('focus-item-promote');
+  prevItems.forEach(el => el.classList.add('focus-item-shift-up'));
+  trailingNextItems.forEach(el => el.classList.add('focus-item-next-shift'));
+  setTimeout(finish, 360);
 }
 
 function completeTaskWithFocusAnimation() {
   if (current === null) return;
   if (completionInFlight) return;
-  completionInFlight = true;
-
+  if (activePulse && !activePulse.answered) return;
   if (!paused) {
-    paused = true;
-    clearInterval(tick);
-    $('stateText').textContent = 'Paused';
+    pauseTaskRun();
   }
-  clearPulseForTransition();
-  $('focusCompleteWrap')?.classList.add('focus-complete-firing');
-
-  const shouldAnimate = $('focusScreen').classList.contains('active');
-  if (!shouldAnimate) {
-    completeTaskFlow();
-    return;
-  }
-
-  const currentItem = $('focusStack').querySelector('.focus-item-current');
-  if (!currentItem) {
-    completeTaskFlow();
-    return;
-  }
-
-  currentItem.classList.add('focus-item-completing');
-  setTimeout(() => {
-    completeTaskFlow();
-  }, FOCUS_COMPLETE_ANIM_MS);
+  const task = tasks[current];
+  completionPendingEndEntry = { type: 'END', time: Date.now(), pendingComplete: true };
+  completionPendingEndTaskIndex = current;
+  task.log.push(completionPendingEndEntry);
+  completionInFlight = true;
+  timelineMode = 'complete';
+  timelineTaskIndex = current;
+  openTaskTimeline(current, 'complete');
 }
 
 
@@ -996,52 +2003,85 @@ function completeTaskWithFocusAnimation() {
 
 function render() {
   syncScreenRoute();
+  clearDragVisuals();
   const list = $('taskList'); list.innerHTML = '';
   tasks.forEach((t, i) => {
     const d = document.createElement('div');
     d.className = 'task' + (i === current ? ' selected' : '') + (t.done ? ' done' : '');
-    d.onclick = () => { if (!t.done && paused) { clearPulseForTransition(); current = i; render(); } };
+    d.onclick = () => {
+      if (suppressTaskClick) {
+        suppressTaskClick = false;
+        return;
+      }
+      if (!t.done && paused) { clearPulseForTransition(); current = i; render(); }
+    };
     
-    const spentDisplay = i === current && !paused ? fmt(t.spent + Math.floor((Date.now() - lastTickAt) / 1000)): fmt(t.spent);
-
     const content = document.createElement('div');
     content.className = 'task-content';
-    content.innerHTML = `<b>${t.text}</b> <span style="font-size:9px; color:var(--muted); opacity:0.6">[${t.mode}]</span><br><small>${fmt(t.est)} est | ${spentDisplay} spent</small>`;
+    content.innerHTML = `<b>${t.text}</b>${t.mode ? `<br><small style="font-size:11px; color:var(--muted); opacity:0.75">${t.mode}</small>` : ''}`;
     d.appendChild(content);
 
     if (!t.done && paused) {
       const eb = document.createElement('button');
-      eb.innerHTML = '✎'; eb.style.cssText = "background:transparent; border:none; font-size:18px;";
+      eb.innerHTML = '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 20h4l10-10-4-4L4 16v4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="m12 6 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+      eb.style.cssText = "background:transparent; border:none; display:flex; align-items:center; justify-content:center;";
       eb.onclick = (e) => { e.stopPropagation(); openEdit(i); };
       d.appendChild(eb);
     }
+
+    if (paused) {
+      d.draggable = true;
+      d.addEventListener('dragstart', (e) => onTaskDragStart(e, i, d));
+      d.addEventListener('dragover', (e) => onTaskDragOver(e, d));
+      d.addEventListener('drop', (e) => onTaskDrop(e, d));
+      d.addEventListener('dragend', onTaskDragEnd);
+      d.addEventListener('pointerdown', (e) => onTaskPointerDown(e, i, d));
+    } else {
+      d.draggable = false;
+    }
+
     list.appendChild(d);
   });
   if (current !== null) {
-    $('currentTaskDisplay').textContent = tasks[current].text;
     $('countdown').textContent = fmt(Math.max(0, tasks[current].est - tasks[current].spent));
     $('stopwatch').textContent = fmt(tasks[current].spent);
-    $('startBtn').textContent = paused ? (tasks[current].spent > 0 ? 'Resume' : 'Start') : 'Pause';
+  } else {
+    $('countdown').textContent = '00:00:00';
+    $('stopwatch').textContent = '00:00:00';
   }
-  $('addWrapper').style.display = (paused || current === null) ? 'block' : 'none';
-  $('timerGrid').style.display = (current !== null) ? 'grid' : 'none';
-  $('endSessionBtn').style.display = sessionStartTimestamp ? 'block' : 'none';
-  $('actionButtons').style.display = (current !== null) ? 'flex' : 'none';
+  $('addWrapper').style.display = (paused || current === null) ? 'flex' : 'none';
+  $('timerGrid').style.display = (current !== null) ? 'block' : 'none';
+  $('endSessionBtn').disabled = !sessionStartTimestamp;
+  $('endSessionBtn').style.opacity = sessionStartTimestamp ? '1' : '0.45';
+  $('endSessionBtn').style.pointerEvents = sessionStartTimestamp ? 'auto' : 'none';
+  $('actionButtons').style.display = 'flex';
+  $('startBtn').textContent = 'enter session';
+  $('startBtn').disabled = current === null;
+  $('startBtn').style.opacity = current === null ? '0.45' : '1';
+  $('startBtn').style.pointerEvents = current === null ? 'none' : 'auto';
   renderFocusStack();
+  $('focusStopwatchMain').textContent = focusStopwatchText();
+  $('focusRemainingSub').textContent = `remaining ${focusRemainingText()}`;
   renderFocusActions();
 }
 
 /// OPEN TASK TIMELINE FUNCTION ///
 
-function openTaskTimeline(index) {
+function openTaskTimeline(index, mode = 'view') {
   if (activePulse && !activePulse.answered) {
     completionInFlight = false;
     $('focusCompleteWrap')?.classList.remove('focus-complete-firing');
     return;
   }
+  timelineMode = mode;
+  timelineTaskIndex = index;
   const t = tasks[index];
   const tbody = $('taskTimelineTable').querySelector('tbody');
   tbody.innerHTML = '';
+  const confirmBtn = $('confirmTaskTimelineBtn');
+  const backBtn = $('backTaskTimelineBtn');
+  confirmBtn.textContent = mode === 'complete' ? 'Confirm' : 'Close';
+  backBtn.style.display = mode === 'complete' ? 'block' : 'none';
 
   t.log.forEach((e, i) => {
     const tr = document.createElement('tr');
@@ -1049,41 +2089,59 @@ function openTaskTimeline(index) {
       <td>${e.type}</td>
       <td>${new Date(e.time).toLocaleTimeString()}</td>
 
-      <td>${e.type === 'PULSE'? `<input type="checkbox" ${e.answered ? 'checked' : ''} onchange="this.checked ? (tasks[${index}].log[${i}].answered = true) : (tasks[${index}].log[${i}].answered = false)">`: '—'}</td>
+      <td>${e.type === 'PULSE'? `<input type="checkbox" ${e.answered ? 'checked' : ''} onchange="this.checked ? (tasks[${index}].log[${i}].answered = true) : (tasks[${index}].log[${i}].answered = false)">`: '-'}</td>
     `;
 
     tbody.appendChild(tr);
   });
 
   $('taskTimelineOverlay').style.display = 'flex';
-  
-  $('confirmTaskTimelineBtn').onclick = () => {
-    $('taskTimelineOverlay').style.display = 'none';
 
-    // Move to next task
-    const next = tasks.findIndex(t => !t.done);
-    current = next !== -1 ? next : null;
+  backBtn.onclick = () => {
+    $('taskTimelineOverlay').style.display = 'none';
+    if (timelineMode === 'complete' && completionPendingEndEntry && completionPendingEndTaskIndex !== null) {
+      const backTask = tasks[completionPendingEndTaskIndex];
+      if (backTask) {
+        const pendingIdx = backTask.log.indexOf(completionPendingEndEntry);
+        if (pendingIdx !== -1) {
+          backTask.log.splice(pendingIdx, 1);
+        }
+      }
+      completionPendingEndEntry = null;
+      completionPendingEndTaskIndex = null;
+    }
     completionInFlight = false;
     $('focusCompleteWrap')?.classList.remove('focus-complete-firing');
+    renderFocusActions();
+  };
+
+  confirmBtn.onclick = () => {
+    $('taskTimelineOverlay').style.display = 'none';
+
+    if (timelineMode === 'complete') {
+      $('focusCompleteWrap')?.classList.add('focus-complete-firing');
+      animateStackCompletionAndCommit();
+      return;
+    }
 
     render();
-
-    // If all tasks done → end session
-    if (pendingSessionEnd) {
-      pendingSessionEnd = false;
-      endSession();
-    }
   };
 }
 
 $('openAddModalBtn').onclick = () => {
   editingIndex = null;
-  $('modalTitle').textContent = "Add New Task";
+  $('modalTitle').innerHTML = modalAddIcon;
   $('modalTaskName').value = ""; 
-  $('smartTimeInput').value = "00:00:00";
-  $('pulseRange').value = 15;
-  $('pulseDisplay').textContent = '15m';
-  $('deleteTaskBtn').style.display = 'none';
+  smartTypedDigits = '';
+  setSmartMaskFromDigits();
+  $('workModeSelect').value = '';
+  $('pulseRange').value = '0';
+  setPulseRangeLabel();
+  $('editorActionsRow').classList.remove('edit-mode');
+  $('editorActionsRow').classList.add('add-mode');
+  $('deleteTaskBtn').classList.remove('is-enabled');
+  $('deleteTaskBtn').classList.add('is-disabled');
+  $('deleteTaskBtn').disabled = true;
   $('taskEditorOverlay').style.display = 'flex';
 };
 
@@ -1092,14 +2150,20 @@ $('openAddModalBtn').onclick = () => {
 function openEdit(index) {
   editingIndex = index;
   const t = tasks[index];
-  $('modalTitle').textContent = "Edit Task";
+  $('modalTitle').innerHTML = modalEditIcon;
   $('modalTaskName').value = t.text;
   const h = Math.floor(t.est/3600), m = Math.floor((t.est%3600)/60), s = t.est%60;
-  $('smartTimeInput').value = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  smartTypedDigits = `${String(h).padStart(2,'0')}${String(m).padStart(2,'0')}${String(s).padStart(2,'0')}`.slice(-6);
+  setSmartMaskFromDigits();
   $('workModeSelect').value = t.mode || '';
-  $('pulseRange').value = t.pulse;
-  $('pulseDisplay').textContent = t.pulse === 0 ? 'OFF' : t.pulse + 'm';
-  $('deleteTaskBtn').style.display = 'block';
+  const pulseVal = (t.pulse || 0) < 5 ? 0 : Math.max(5, Math.min(15, t.pulse || 0));
+  $('pulseRange').value = String(pulseVal);
+  setPulseRangeLabel();
+  $('editorActionsRow').classList.remove('add-mode');
+  $('editorActionsRow').classList.add('edit-mode');
+  $('deleteTaskBtn').classList.remove('is-disabled');
+  $('deleteTaskBtn').classList.add('is-enabled');
+  $('deleteTaskBtn').disabled = false;
   $('taskEditorOverlay').style.display = 'flex';
 }
 
@@ -1122,7 +2186,8 @@ $('saveTaskBtn').onclick = () => {
   const name = $('modalTaskName').value.trim(), timeStr = $('smartTimeInput').value;
   if (!name || timeToSeconds(timeStr) <= 0) return;
   const mode = $('workModeSelect').value;
-  const pulse = parseInt($('pulseRange').value);
+  const pulseRaw = parseInt($('pulseRange').value, 10) || 0;
+  const pulse = pulseRaw < 5 ? 0 : Math.max(5, Math.min(15, pulseRaw));
   
   if (editingIndex === null) {
     tasks.push({ text: name, est: timeToSeconds(timeStr), spent: 0, done: false, log: [], pauses: 0,pauseStartedAt: null, mode, pulse });
@@ -1142,65 +2207,36 @@ $('cancelEditor').onclick = () => { $('taskEditorOverlay').style.display = 'none
 
 $('startBtn').onclick = () => {
   if (current === null) return;
-  if (paused) {
-    paused = false;
-    $('stateText').textContent = 'Running';
-    if (!sessionStartTimestamp) sessionStartTimestamp = Date.now();
-
-    if (!tasks[current].log.length) {
-      tasks[current].log.push({ type: 'START', time: Date.now() });
-    } else {
-      tasks[current].log.push({ type: 'RESUME', time: Date.now() });
-    }
-    lastTickAt = Date.now();
-    tick = setInterval(() => {
-      tasks[current].spent++;
-      totalFocusedSeconds++;
-      $('countdown').textContent = fmt(Math.max(0, tasks[current].est - tasks[current].spent));
-      $('stopwatch').textContent = fmt(tasks[current].spent);
-      const focusTimer = $('focusStack').querySelector('.focus-current-timer');
-      if (focusTimer && paused === false) {
-        focusTimer.textContent = $('countdown').textContent;
-      }
-    }, 1000);
-    // ==== START PULSE TIMER ====
-    if (tasks[current].pulse > 0) {
-      clearInterval(pulseTimer);
-      pulseTimer = setInterval(() => {
-        firePulse(tasks[current]);
-      }, 20 * 1000);
-    }
-    if (tasks[current].pauseStartedAt) {
-      tasks[current].pauses += Math.floor(
-        (Date.now() - tasks[current].pauseStartedAt) / 1000
-      );
-      tasks[current].pauseStartedAt = null;
-    }
-
-  } else {
-    paused = true; clearInterval(tick);
-    $('stateText').textContent = 'Paused';
-    tasks[current].log.push({ type: 'PAUSE', time: Date.now() });
-    tasks[current].pauseStartedAt = Date.now();
-    clearPulseForTransition();
-
-  }
+  sessionActive = true;
+  taskRunning = false;
+  paused = true;
+  clearInterval(tick);
+  resetPulseScheduler();
+  $('stateText').textContent = 'Idle';
+  setScreen('focus');
   render();
 };
 
 /// COMPLETE BUTTON FUNCTION ///
 
-$('completeBtn').onclick = () => {
-  completeTaskWithFocusAnimation();
-};
+if ($('completeBtn')) {
+  $('completeBtn').onclick = () => {
+    completeTaskWithFocusAnimation();
+  };
+}
 
 /// END SESSION FUNCTION ///
 
 function endSession() {
   completionInFlight = false;
+  completionPendingEndEntry = null;
+  completionPendingEndTaskIndex = null;
   $('focusCompleteWrap')?.classList.remove('focus-complete-firing');
   clearPulseForTransition();
-  clearInterval(tick); paused = true;
+  clearInterval(tick);
+  paused = true;
+  taskRunning = false;
+  sessionActive = false;
   sessionEndTimestamp = Date.now();
   if (!sessionStartTimestamp) sessionStartTimestamp = sessionEndTimestamp;
   const total = Math.floor((sessionEndTimestamp - sessionStartTimestamp) / 1000);
@@ -1236,7 +2272,11 @@ $('closeStatsBtn').onclick = () => {
   current = null;
   sessionStartTimestamp = null;
   totalFocusedSeconds = 0;
+  sessionActive = false;
+  taskRunning = false;
   completionInFlight = false;
+  completionPendingEndEntry = null;
+  completionPendingEndTaskIndex = null;
   $('focusCompleteWrap')?.classList.remove('focus-complete-firing');
   $('resultsOverlay').style.display = 'none';
   render();
@@ -1248,6 +2288,3 @@ render();
 
 </body>
 </html>
-
-
-
