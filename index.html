@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>Lock-In Tool</title>
+<title>Lock IN</title>
 <style>
 :root {
   --bg: #111827; --card: #1f2937; --muted: #94a3b8; --accent: #22c55e;
@@ -26,6 +26,156 @@ body {
   border-radius: 16px; background: var(--card);
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
   box-sizing: border-box; display: flex; flex-direction: column;
+}
+
+.screen { display: none; }
+.screen.active { display: block; }
+.screen-focus.active { display: flex; }
+
+.focus-shell {
+  width: 100%;
+  min-height: 72vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 28px;
+}
+
+.focus-stack {
+  width: 100%;
+  max-width: 520px;
+  min-height: 300px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+}
+
+.focus-item {
+  text-align: center;
+  transition: transform 450ms ease, opacity 450ms ease;
+}
+
+.focus-item-prev {
+  opacity: 0.38;
+  transform: translateY(-8px) scale(0.96);
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.focus-item-next {
+  opacity: 0.38;
+  transform: translateY(8px) scale(0.96);
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.focus-item-current {
+  opacity: 1;
+  transform: scale(1.03);
+}
+
+.focus-current-task {
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.focus-current-timer {
+  margin-top: 8px;
+  font-size: 40px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.focus-item-completing {
+  opacity: 0.18;
+  transform: translateY(42px) scale(0.95);
+}
+
+.focus-actions {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.focus-lock-switch {
+  width: 100%;
+  cursor: pointer;
+}
+
+.focus-lock-switch input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.focus-lock-track {
+  width: 100%;
+  height: 64px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #111827;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  padding: 0 18px;
+  box-sizing: border-box;
+}
+
+.focus-lock-knob {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  background: #f8fafc;
+  transition: transform 450ms ease;
+}
+
+.focus-lock-label-on,
+.focus-lock-label-off {
+  position: relative;
+  z-index: 1;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.focus-lock-label-on { color: #111827; }
+.focus-lock-label-off { color: var(--muted); }
+
+.focus-lock-switch input:checked + .focus-lock-track {
+  background: var(--accent);
+}
+
+.focus-lock-switch input:checked + .focus-lock-track .focus-lock-knob {
+  transform: translateX(calc(100% - 12px));
+}
+
+.focus-complete-wrap {
+  width: 100%;
+  transition: transform 450ms ease, opacity 450ms ease;
+}
+
+.focus-complete-wrap.focus-complete-firing {
+  transform: translateY(6px) scale(0.98);
+  opacity: 0.75;
+}
+
+.focus-complete-btn {
+  width: 100%;
+  padding: 16px;
+}
+
+.focus-manage-btn {
+  width: 100%;
 }
 
 header { display: flex; flex-direction: column; margin-bottom: 24px; }
@@ -141,6 +291,86 @@ footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border
   border: 2px solid var(--accent); background: #111827; color: var(--accent);
   border-radius: 12px;
 }
+
+
+#resBreakdown td, #resBreakdown th {
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+#resBreakdown tr:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+#pulsePopup {
+  backdrop-filter: blur(8px);
+}
+
+#pulseTapCard {
+  width: min(90vw, 420px);
+  height: 200px;
+
+  border-radius: 28px; /* squarish-round */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: 1px;
+
+  color: #000;
+  cursor: pointer;
+  user-select: none;
+
+  transition:
+    background-color 0.8s ease,
+    box-shadow 0.8s ease,
+    transform 0.2s ease;
+
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.6);
+}
+
+/* Pulse beat stays subtle */
+#pulseTapCard:active {
+  transform: scale(1.05);
+}
+
+/* COLOR STATES */
+.pulse-green {
+  background: #22c55e;
+  box-shadow: 0 0 60px rgba(34,197,94,0.6);
+}
+
+.pulse-yellow {
+  background: #eab308;
+  box-shadow: 0 0 60px rgba(234,179,8,0.6);
+}
+
+.pulse-orange {
+  background: #f97316;
+  box-shadow: 0 0 60px rgba(249,115,22,0.6);
+}
+
+.pulse-red {
+  background: #ef4444;
+  box-shadow: 0 0 60px rgba(239,68,68,0.6);
+}
+
+
+@keyframes pulseBeat {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+.app.blurred {
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+
 </style>
 </head>
 <body>
@@ -153,37 +383,59 @@ footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border
   </div>
 </div>
 
-<div class="app">
-  <header>
-    <h1>🔒 Lock-In Tool</h1>
-    <div class="subtitle">v4.6 [Integrity Engine]</div>
-  </header>
-
-  <div class="main-add-container" id="addWrapper">
-    <button class="btn-add-task" id="openAddModalBtn">+ Add New Task</button>
-  </div>
-
-  <div id="taskList" class="task-list"></div>
-
-  <div id="timerGrid" class="timer-grid">
-    <div class="timer-card">
-      <div id="currentTaskDisplay" style="font-size: 12px; color: var(--muted); margin-bottom: 5px;">No task</div>
-      <div class="time" id="countdown">00:00:00</div>
+<div class="app" id="app">
+  <section id="focusScreen" class="screen screen-focus">
+    <div class="focus-shell">
+      <div id="focusStack" class="focus-stack"></div>
+      <div class="focus-actions" id="focusActions">
+        <label class="focus-lock-switch">
+          <input type="checkbox" id="focusLockToggle">
+          <span class="focus-lock-track">
+            <span class="focus-lock-knob"></span>
+            <span class="focus-lock-label-on">LOCK</span>
+            <span class="focus-lock-label-off">UNLOCK</span>
+          </span>
+        </label>
+        <div id="focusCompleteWrap" class="focus-complete-wrap">
+          <button id="focusCompleteBtn" class="primary focus-complete-btn">Complete Task</button>
+        </div>
+        <div id="focusManageSlot"></div>
+      </div>
     </div>
-    <div class="timer-card">
-      <div id="stateText" style="font-size: 12px; color: var(--muted); margin-bottom: 5px;">Idle</div>
-      <div class="time" id="stopwatch">00:00:00</div>
+  </section>
+
+  <section id="manageScreen" class="screen screen-manage active">
+    <header>
+      <h1>🔒 Lock-In Tool</h1>
+      <div class="subtitle">v4.6 [Integrity Engine]</div>
+    </header>
+
+    <div class="main-add-container" id="addWrapper">
+      <button class="btn-add-task" id="openAddModalBtn">+ Add New Task</button>
     </div>
-  </div>
 
-  <div class="actions" id="actionButtons">
-    <button id="startBtn" class="primary">Start</button>
-    <button id="completeBtn">Complete</button>
-  </div>
+    <div id="taskList" class="task-list"></div>
 
-  <button id="endSessionBtn" style="display:none; margin-top: 12px; border-color: var(--error); color: var(--error); width: 100%;">End Session Early</button>
+    <div id="timerGrid" class="timer-grid">
+      <div class="timer-card">
+        <div id="currentTaskDisplay" style="font-size: 12px; color: var(--muted); margin-bottom: 5px;">No task</div>
+        <div class="time" id="countdown">00:00:00</div>
+      </div>
+      <div class="timer-card">
+        <div id="stateText" style="font-size: 12px; color: var(--muted); margin-bottom: 5px;">Idle</div>
+        <div class="time" id="stopwatch">00:00:00</div>
+      </div>
+    </div>
 
-  <footer>by sajo moanne</footer>
+    <div class="actions" id="actionButtons">
+      <button id="startBtn" class="primary">Start</button>
+      <button id="completeBtn">log task</button>
+    </div>
+
+    <button id="endSessionBtn" style="display:none; margin-top: 12px; border-color: var(--error); color: var(--error); width: 100%;">End Session Early</button>
+
+    <footer>by sajo moanne</footer>
+  </section>
 </div>
 
 <!-- Task Modal -->
@@ -198,20 +450,21 @@ footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border
     </div>
 
     <!-- Mode Switch -->
-    <div class="setting-row">
-      <div class="setting-label">Work Mode: <span id="modeDisplay" style="color:var(--accent)">ONLINE</span></div>
-      <label class="toggle-switch">
-        <input type="checkbox" id="workModeToggle" checked>
-        <span class="slider"></span>
-      </label>
+    <div class="setting-row" style="flex-direction:column; align-items:flex-start;">
+      <div class="setting-label">Work Mode</div>
+      <select id="workModeSelect" style="width:100%; padding:12px; border-radius:10px; background:#111827; color:#fff; border:1px solid var(--border);">
+        <option value="">Blank</option>
+        <option value="ONLINE">Online</option>
+        <option value="OFFLINE">Offline</option>
+      </select>
     </div>
 
     <!-- Pulse Slider -->
     <div class="setting-row" style="flex-direction: column; align-items: flex-start;">
       <div class="setting-label">Pulse Frequency: <span id="pulseDisplay" style="color:var(--accent)">15m</span></div>
-      <input type="range" id="pulseRange" class="range-picker" min="0" max="60" step="5" value="15">
+      <input type="range" id="pulseRange" class="range-picker" min="0" max="30" step="5" value="15">
       <div style="width:100%; display:flex; justify-content:space-between; font-size:10px; color:var(--muted)">
-        <span>OFF</span><span>30m</span><span>60m</span>
+        <span>OFF</span><span>15m</span><span>30m</span>
       </div>
     </div>
 
@@ -268,20 +521,51 @@ footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border
         <div class="insight-val" id="resRatio">0%</div>
       </div>
     </div>
-    <div class="task-breakdown" id="pulseTimeline">
-      <h4 style="margin-top:0">Pulse Timeline</h4>
-    </div>
 
-    <div class="task-breakdown" id="resBreakdown"></div>
+    <table id="resBreakdown" style="width:100%; border-collapse:collapse; font-size:13px;">
+      <thead>
+        <tr style="color:var(--muted); text-align:left;">
+          <th>Task</th>
+          <th>Mode</th>
+          <th>Paused</th>
+          <th>Work</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
     <button id="closeStatsBtn" class="primary" style="width:100%; margin-top:20px">New Session</button>
+  </div>
+</div>
+
+<div id="taskTimelineOverlay" class="overlay">
+  <div class="overlay-card" style="max-width:500px;">
+    <h3>Task Timeline</h3>
+    <table id="taskTimelineTable" style="width:100%; font-size:13px;">
+      <thead>
+        <tr>
+          <th>Event</th>
+          <th>Time</th>
+          <th>Valid</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <button id="confirmTaskTimelineBtn" class="primary" style="width:100%; margin-top:15px;">Confirm</button>
   </div>
 </div>
 
 <!-- Pulse Popup -->
 <div id="pulsePopup" class="overlay">
-  <div class="overlay-card">
-    <h3>You there?</h3>
-    <button id="pulseYesBtn" class="primary" style="width:100%">Yes</button>
+  <div id="pulseTapCard" class="overlay-card" style="
+    padding: 40px;
+    font-size: 28px;
+    font-weight: 900;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+  ">
+    YOU THERE?
   </div>
 </div>
 
@@ -294,8 +578,59 @@ let totalFocusedSeconds = 0, editingIndex = null;
 let pulseTimer = null;
 let pulseLog = [];
 let lastPulseAt = null;
+let activePulse = null;
+
+let pendingSessionEnd = false;
+
+let lastTickAt = null;
+let uiScreen = 'manage';
+let completionInFlight = false;
+const FOCUS_COMPLETE_ANIM_MS = 450;
 
 const $ = id => document.getElementById(id);
+
+function setScreen(mode) {
+  const focus = $('focusScreen');
+  const manage = $('manageScreen');
+  if (!focus || !manage) return;
+  const target = paused === false ? 'focus' : mode;
+  uiScreen = target === 'focus' ? 'focus' : 'manage';
+  focus.classList.remove('active');
+  manage.classList.remove('active');
+  if (uiScreen === 'focus') {
+    focus.classList.add('active');
+  } else {
+    manage.classList.add('active');
+  }
+}
+
+function syncScreenRoute() {
+  if (paused === false) {
+    setScreen('focus');
+    return;
+  }
+  if (!sessionStartTimestamp) {
+    setScreen('manage');
+    return;
+  }
+  setScreen(uiScreen);
+}
+
+function isOverlayVisible(id) {
+  const el = $(id);
+  return !!el && el.style.display === 'flex';
+}
+
+function clearPulseForTransition() {
+  if (pulseTimer) { clearInterval(pulseTimer); pulseTimer = null; }
+  if (activePulse) {
+    if (activePulse.timeout) { clearTimeout(activePulse.timeout); activePulse.timeout = null; }
+    if (activePulse.colorTimer) { clearInterval(activePulse.colorTimer); activePulse.colorTimer = null; }
+  }
+  activePulse = null;
+  $('pulsePopup').style.display = 'none';
+  $('app')?.classList.remove('blurred');
+}
 
 const fmt = (s) => {
   const h = Math.floor(s / 3600);
@@ -305,9 +640,7 @@ const fmt = (s) => {
 };
 
 // Modal UI Logic
-$('workModeToggle').onchange = (e) => {
-  $('modeDisplay').textContent = e.target.checked ? 'ONLINE' : 'OFFLINE';
-};
+
 $('pulseRange').oninput = (e) => {
   const v = parseInt(e.target.value);
   $('pulseDisplay').textContent = v === 0 ? 'OFF' : v + 'm';
@@ -342,6 +675,8 @@ function toggleSheet() {
   $('sheetOverlay').classList.toggle('active');
 }
 
+/// OPEN SHEET FUNCTION ///
+
 function openSheet(type) {
   const title = $('sheetTitle'), body = $('sheetBody');
   if (type === 'focus') {
@@ -354,27 +689,74 @@ function openSheet(type) {
   toggleSheet();
 }
 
+/// CLOSE WELCOME FUNCTION ///
+
 function closeWelcome() {
   $('welcomeScreen').style.display = 'none'; 
   if ("Notification" in window && Notification.permission === "default") {
     Notification.requestPermission();
   }
 }
+
 function closeConfirm() { $('confirmEndOverlay').style.display = 'none'; }
 
-$('endSessionBtn').onclick = () => { $('confirmEndOverlay').style.display = 'flex'; };
+
+$('endSessionBtn').onclick = () => {
+  if (activePulse && !activePulse.answered) return;
+  $('confirmEndOverlay').style.display = 'flex';
+};
 $('confirmEndBtn').onclick = () => { closeConfirm(); endSession(); };
+
+$('focusLockToggle').onchange = (e) => {
+  const wantsLocked = e.target.checked;
+  if (wantsLocked && paused) {
+    $('startBtn').onclick();
+    return;
+  }
+  if (!wantsLocked && !paused) {
+    $('startBtn').onclick();
+    return;
+  }
+  render();
+};
+
+$('focusCompleteBtn').onclick = () => {
+  completeTaskWithFocusAnimation();
+};
+
+
+/// FIRE PULSE FUNCTION ///
 
 function firePulse(task) {
   const now = Date.now();
 
+  if (paused) return;
+  if (isOverlayVisible('confirmEndOverlay') || isOverlayVisible('taskTimelineOverlay') || isOverlayVisible('resultsOverlay')) return;
+  if (activePulse && !activePulse.answered) {
+    return; // don't stack pulses
+  }
+
+  const taskIndex = tasks.indexOf(task);
+  if (taskIndex === -1) return;
+
   const pulseEntry = {
     task: task.text,
+    taskIndex,
     time: now,
     answered: false
+    
   };
+  activePulse = pulseEntry;
+
 
   pulseLog.push(pulseEntry);
+
+  task.log.push({
+    type: 'PULSE',
+    time: now,
+    answered: false
+  });
+  pulseEntry.logIndex = task.log.length - 1;
 
   // In-app pulse popup
   if (document.visibilityState === 'visible') {
@@ -388,29 +770,243 @@ function firePulse(task) {
   }
 
   lastPulseAt = now;
+
+  pulseEntry.timeout = setTimeout(() => {
+  if (!pulseEntry.answered) {
+    failPulse(pulseEntry);
+    }
+  }, 60 * 1000);
+
 }
+
+/// SHOW PULSE POPUP FUNCTION ///
 
 function showPulsePopup(pulseEntry) {
   const popup = $('pulsePopup');
+  const card = $('pulseTapCard');
+
   popup.style.display = 'flex';
-  $('pulseYesBtn').onclick = null;
-  $('pulseYesBtn').onclick = () => {
-    pulseEntry.answered = true;
-    popup.style.display = 'none';
+
+  const pulseStart = pulseEntry.time;
+
+  // initial color
+  updatePulseColor(pulseStart);
+
+  // update color every second
+  pulseEntry.colorTimer = setInterval(() => {
+    updatePulseColor(pulseStart);
+  }, 1000);
+
+  card.onclick = () => {
+    clearInterval(pulseEntry.colorTimer);
+    answerPulse(pulseEntry);
   };
 }
 
 
+/// PULSE COLOR FUNCTION ///
+
+function updatePulseColor(startTime) {
+  const elapsed = Math.floor((Date.now() - startTime) / 1000);
+  const card = $('pulseTapCard');
+
+  card.className = ''; // reset
+
+  if (elapsed < 10) {
+    card.classList.add('pulse-green');
+  } else if (elapsed < 30) {
+    card.classList.add('pulse-yellow');
+  } else if (elapsed < 45) {
+    card.classList.add('pulse-orange');
+  } else {
+    card.classList.add('pulse-red');
+  }
+}
+
+
+/// ANSWER PULSE FUNCTION ///
+
+function answerPulse(pulseEntry) {
+  pulseEntry.answered = true;
+  if (pulseEntry.timeout) { clearTimeout(pulseEntry.timeout); pulseEntry.timeout = null; }
+  if (pulseEntry.colorTimer) { clearInterval(pulseEntry.colorTimer); pulseEntry.colorTimer = null; }
+  activePulse = null;
+
+  const task = tasks[pulseEntry.taskIndex];
+  if (task && task.log[pulseEntry.logIndex] && task.log[pulseEntry.logIndex].type === 'PULSE') {
+    task.log[pulseEntry.logIndex].answered = true;
+  }
+
+  $('pulsePopup').style.display = 'none';
+  $('app')?.classList.remove('blurred');
+}
+
+/// FAIL PULSE FUNCTION ///
+
+function failPulse(pulseEntry) {
+  if (pulseEntry.answered) return;
+  pulseEntry.answered = false;
+  if (pulseEntry.timeout) { clearTimeout(pulseEntry.timeout); pulseEntry.timeout = null; }
+  if (pulseEntry.colorTimer) { clearInterval(pulseEntry.colorTimer); pulseEntry.colorTimer = null; }
+  activePulse = null;
+
+  const task = tasks[pulseEntry.taskIndex];
+  if (!task) return;
+
+  // mark pulse as failed in task log
+  if (task.log[pulseEntry.logIndex] && task.log[pulseEntry.logIndex].type === 'PULSE') {
+    task.log[pulseEntry.logIndex].failed = true;
+  }
+
+  // add 60s sidelined time
+  task.pauses += 60;
+
+  // close popup + unblur if visible
+  $('pulsePopup').style.display = 'none';
+  $('app')?.classList.remove('blurred');
+}
+
+function focusTimerText() {
+  if (paused === true) return '00:00';
+  if (current === null || !tasks[current]) return '00:00';
+  return $('countdown').textContent || '00:00';
+}
+
+function renderFocusStack() {
+  const stack = $('focusStack');
+  stack.innerHTML = '';
+
+  if (tasks.length === 0 || current === null || !tasks[current]) {
+    const empty = document.createElement('div');
+    empty.className = 'focus-item focus-item-current';
+    empty.innerHTML = `
+      <div class="focus-current-task">No Active Task</div>
+      <div class="focus-current-timer">00:00</div>
+    `;
+    stack.appendChild(empty);
+    return;
+  }
+
+  const startPrev = Math.max(0, current - 2);
+  for (let i = startPrev; i < current; i++) {
+    const row = document.createElement('div');
+    row.className = 'focus-item focus-item-prev';
+    row.textContent = tasks[i].text;
+    stack.appendChild(row);
+  }
+
+  const currentRow = document.createElement('div');
+  currentRow.className = 'focus-item focus-item-current';
+  currentRow.dataset.taskIndex = String(current);
+  currentRow.innerHTML = `
+    <div class="focus-current-task">${tasks[current].text}</div>
+    <div class="focus-current-timer">${focusTimerText()}</div>
+  `;
+  stack.appendChild(currentRow);
+
+  const endNext = Math.min(tasks.length - 1, current + 2);
+  for (let i = current + 1; i <= endNext; i++) {
+    const row = document.createElement('div');
+    row.className = 'focus-item focus-item-next';
+    row.textContent = tasks[i].text;
+    stack.appendChild(row);
+  }
+}
+
+function renderFocusActions() {
+  $('focusLockToggle').checked = paused === false;
+  $('focusLockToggle').disabled = current === null;
+  $('focusCompleteBtn').disabled = current === null || completionInFlight;
+
+  const manageSlot = $('focusManageSlot');
+  manageSlot.innerHTML = '';
+  if (paused === true) {
+    const manageBtn = document.createElement('button');
+    manageBtn.id = 'focusManageBtn';
+    manageBtn.className = 'focus-manage-btn';
+    manageBtn.textContent = 'Manage';
+    manageBtn.onclick = () => {
+      if (paused === false) {
+        setScreen('focus');
+      } else {
+        setScreen('manage');
+      }
+      render();
+    };
+    manageSlot.appendChild(manageBtn);
+  }
+}
+
+function completeTaskFlow() {
+  if (current === null) {
+    completionInFlight = false;
+    $('focusCompleteWrap')?.classList.remove('focus-complete-firing');
+    return;
+  }
+
+  if (!paused) {paused = true;clearInterval(tick);}
+
+  clearPulseForTransition();
+  tasks[current].log.push({ type: 'END', time: Date.now() });
+  const completedTaskIndex = current;
+  tasks[current].done = true;
+
+  clearInterval(pulseTimer);
+  pulseTimer = null;
+
+  if (tasks.every(t => t.done)) {
+    pendingSessionEnd = true;
+  }
+  openTaskTimeline(completedTaskIndex);
+}
+
+function completeTaskWithFocusAnimation() {
+  if (current === null) return;
+  if (completionInFlight) return;
+  completionInFlight = true;
+
+  if (!paused) {
+    paused = true;
+    clearInterval(tick);
+    $('stateText').textContent = 'Paused';
+  }
+  clearPulseForTransition();
+  $('focusCompleteWrap')?.classList.add('focus-complete-firing');
+
+  const shouldAnimate = $('focusScreen').classList.contains('active');
+  if (!shouldAnimate) {
+    completeTaskFlow();
+    return;
+  }
+
+  const currentItem = $('focusStack').querySelector('.focus-item-current');
+  if (!currentItem) {
+    completeTaskFlow();
+    return;
+  }
+
+  currentItem.classList.add('focus-item-completing');
+  setTimeout(() => {
+    completeTaskFlow();
+  }, FOCUS_COMPLETE_ANIM_MS);
+}
+
+
+/// RENDER FUNCTION ///
+
 function render() {
+  syncScreenRoute();
   const list = $('taskList'); list.innerHTML = '';
   tasks.forEach((t, i) => {
     const d = document.createElement('div');
     d.className = 'task' + (i === current ? ' selected' : '') + (t.done ? ' done' : '');
-    d.onclick = () => { if (!t.done && paused) { current = i; render(); } };
+    d.onclick = () => { if (!t.done && paused) { clearPulseForTransition(); current = i; render(); } };
     
+    const spentDisplay = i === current && !paused ? fmt(t.spent + Math.floor((Date.now() - lastTickAt) / 1000)): fmt(t.spent);
+
     const content = document.createElement('div');
     content.className = 'task-content';
-    content.innerHTML = `<b>${t.text}</b> <span style="font-size:9px; color:var(--muted); opacity:0.6">[${t.mode}]</span><br><small>${fmt(t.est)} est | ${fmt(t.spent)} spent</small>`;
+    content.innerHTML = `<b>${t.text}</b> <span style="font-size:9px; color:var(--muted); opacity:0.6">[${t.mode}]</span><br><small>${fmt(t.est)} est | ${spentDisplay} spent</small>`;
     d.appendChild(content);
 
     if (!t.done && paused) {
@@ -431,6 +1027,53 @@ function render() {
   $('timerGrid').style.display = (current !== null) ? 'grid' : 'none';
   $('endSessionBtn').style.display = sessionStartTimestamp ? 'block' : 'none';
   $('actionButtons').style.display = (current !== null) ? 'flex' : 'none';
+  renderFocusStack();
+  renderFocusActions();
+}
+
+/// OPEN TASK TIMELINE FUNCTION ///
+
+function openTaskTimeline(index) {
+  if (activePulse && !activePulse.answered) {
+    completionInFlight = false;
+    $('focusCompleteWrap')?.classList.remove('focus-complete-firing');
+    return;
+  }
+  const t = tasks[index];
+  const tbody = $('taskTimelineTable').querySelector('tbody');
+  tbody.innerHTML = '';
+
+  t.log.forEach((e, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${e.type}</td>
+      <td>${new Date(e.time).toLocaleTimeString()}</td>
+
+      <td>${e.type === 'PULSE'? `<input type="checkbox" ${e.answered ? 'checked' : ''} onchange="this.checked ? (tasks[${index}].log[${i}].answered = true) : (tasks[${index}].log[${i}].answered = false)">`: '—'}</td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+
+  $('taskTimelineOverlay').style.display = 'flex';
+  
+  $('confirmTaskTimelineBtn').onclick = () => {
+    $('taskTimelineOverlay').style.display = 'none';
+
+    // Move to next task
+    const next = tasks.findIndex(t => !t.done);
+    current = next !== -1 ? next : null;
+    completionInFlight = false;
+    $('focusCompleteWrap')?.classList.remove('focus-complete-firing');
+
+    render();
+
+    // If all tasks done → end session
+    if (pendingSessionEnd) {
+      pendingSessionEnd = false;
+      endSession();
+    }
+  };
 }
 
 $('openAddModalBtn').onclick = () => {
@@ -438,13 +1081,13 @@ $('openAddModalBtn').onclick = () => {
   $('modalTitle').textContent = "Add New Task";
   $('modalTaskName').value = ""; 
   $('smartTimeInput').value = "00:00:00";
-  $('workModeToggle').checked = true;
-  $('modeDisplay').textContent = 'ONLINE';
   $('pulseRange').value = 15;
   $('pulseDisplay').textContent = '15m';
   $('deleteTaskBtn').style.display = 'none';
   $('taskEditorOverlay').style.display = 'flex';
 };
+
+/// OPEN EDIT FUNCTION ///
 
 function openEdit(index) {
   editingIndex = index;
@@ -453,13 +1096,14 @@ function openEdit(index) {
   $('modalTaskName').value = t.text;
   const h = Math.floor(t.est/3600), m = Math.floor((t.est%3600)/60), s = t.est%60;
   $('smartTimeInput').value = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-  $('workModeToggle').checked = (t.mode === 'ONLINE');
-  $('modeDisplay').textContent = t.mode;
+  $('workModeSelect').value = t.mode || '';
   $('pulseRange').value = t.pulse;
   $('pulseDisplay').textContent = t.pulse === 0 ? 'OFF' : t.pulse + 'm';
   $('deleteTaskBtn').style.display = 'block';
   $('taskEditorOverlay').style.display = 'flex';
 }
+
+/// DELETE TASK FUNCTION ///
 
 $('deleteTaskBtn').onclick = () => {
   if (editingIndex !== null) {
@@ -472,14 +1116,16 @@ $('deleteTaskBtn').onclick = () => {
   }
 };
 
+/// SAVE TASK FUNCTION ///
+
 $('saveTaskBtn').onclick = () => {
   const name = $('modalTaskName').value.trim(), timeStr = $('smartTimeInput').value;
   if (!name || timeToSeconds(timeStr) <= 0) return;
-  const mode = $('workModeToggle').checked ? 'ONLINE' : 'OFFLINE';
+  const mode = $('workModeSelect').value;
   const pulse = parseInt($('pulseRange').value);
   
   if (editingIndex === null) {
-    tasks.push({ text: name, est: timeToSeconds(timeStr), spent: 0, done: false, log: [], pauses: 0, mode, pulse });
+    tasks.push({ text: name, est: timeToSeconds(timeStr), spent: 0, done: false, log: [], pauses: 0,pauseStartedAt: null, mode, pulse });
   } else {
     tasks[editingIndex].text = name; 
     tasks[editingIndex].est = timeToSeconds(timeStr);
@@ -492,59 +1138,68 @@ $('saveTaskBtn').onclick = () => {
 
 $('cancelEditor').onclick = () => { $('taskEditorOverlay').style.display = 'none'; };
 
+/// START BUTTON FUNCTION ///
+
 $('startBtn').onclick = () => {
   if (current === null) return;
   if (paused) {
-    paused = false; 
+    paused = false;
     $('stateText').textContent = 'Running';
     if (!sessionStartTimestamp) sessionStartTimestamp = Date.now();
-    tasks[current].log.push({ type: 'START', time: Date.now() });
+
+    if (!tasks[current].log.length) {
+      tasks[current].log.push({ type: 'START', time: Date.now() });
+    } else {
+      tasks[current].log.push({ type: 'RESUME', time: Date.now() });
+    }
+    lastTickAt = Date.now();
     tick = setInterval(() => {
       tasks[current].spent++;
       totalFocusedSeconds++;
       $('countdown').textContent = fmt(Math.max(0, tasks[current].est - tasks[current].spent));
       $('stopwatch').textContent = fmt(tasks[current].spent);
+      const focusTimer = $('focusStack').querySelector('.focus-current-timer');
+      if (focusTimer && paused === false) {
+        focusTimer.textContent = $('countdown').textContent;
+      }
     }, 1000);
     // ==== START PULSE TIMER ====
     if (tasks[current].pulse > 0) {
       clearInterval(pulseTimer);
       pulseTimer = setInterval(() => {
         firePulse(tasks[current]);
-      }, tasks[current].pulse * 60 * 1000);
+      }, 20 * 1000);
     }
+    if (tasks[current].pauseStartedAt) {
+      tasks[current].pauses += Math.floor(
+        (Date.now() - tasks[current].pauseStartedAt) / 1000
+      );
+      tasks[current].pauseStartedAt = null;
+    }
+
   } else {
     paused = true; clearInterval(tick);
     $('stateText').textContent = 'Paused';
     tasks[current].log.push({ type: 'PAUSE', time: Date.now() });
-    tasks[current].pauses++;
-    // ==== STOP PULSE TIMER ====
-    clearInterval(pulseTimer);
+    tasks[current].pauseStartedAt = Date.now();
+    clearPulseForTransition();
 
   }
   render();
 };
+
+/// COMPLETE BUTTON FUNCTION ///
 
 $('completeBtn').onclick = () => {
-  if (current === null) return;
-  if (!paused) { paused = true; clearInterval(tick); tasks[current].log.push({ type: 'PAUSE', time: Date.now() }); }
-  tasks[current].done = true;
-  const next = tasks.findIndex(t => !t.done);
-  current = next !== -1 ? next : null;
-  if (current === null) endSession();
-
-  clearInterval(pulseTimer);
-  pulseTimer = null;
-
-  render();
-  if (current !== null && !paused && tasks[current].pulse > 0) {
-    pulseTimer = setInterval(() => {
-      firePulse(tasks[current]);
-    }, tasks[current].pulse * 60 * 1000);
-  }
-
+  completeTaskWithFocusAnimation();
 };
 
+/// END SESSION FUNCTION ///
+
 function endSession() {
+  completionInFlight = false;
+  $('focusCompleteWrap')?.classList.remove('focus-complete-firing');
+  clearPulseForTransition();
   clearInterval(tick); paused = true;
   sessionEndTimestamp = Date.now();
   if (!sessionStartTimestamp) sessionStartTimestamp = sessionEndTimestamp;
@@ -554,38 +1209,38 @@ function endSession() {
   $('resFocused').textContent = fmt(totalFocusedSeconds);
   $('resPaused').textContent = fmt(Math.max(0, total - totalFocusedSeconds));
   $('resRatio').textContent = ratio + '%';
-  const b = $('resBreakdown'); b.innerHTML = '';
-  tasks.forEach(t => {
-    const r = document.createElement('div'); r.className = 'breakdown-row';
-    r.innerHTML = `<div>${t.text} (${t.mode})</div><div style="font-family:monospace">${fmt(t.spent)}</div>`;
-    b.appendChild(r);
+  const tbody = $('resBreakdown').querySelector('tbody');
+  tbody.innerHTML = '';
+
+  tasks.forEach((t, i) => {
+    const total = t.spent + (t.pauses || 0);
+    const tr = document.createElement('tr');
+    tr.style.cursor = 'pointer';
+    tr.innerHTML = `
+     <td>${t.text}</td>
+      <td>${t.mode || '-'}</td>
+      <td>${fmt(t.pauses || 0)}</td>
+      <td>${fmt(t.spent)}</td>
+      <td>${fmt(total)}</td>
+    `;
+    tr.onclick = () => openTaskTimeline(i);
+    tbody.appendChild(tr);
   });
   
-  const timeline = $('pulseTimeline');
-  timeline.innerHTML = '<h4>Pulse Timeline</h4>';
-
-  const timelineTrack = document.createElement('div');
-  timelineTrack.style.position = 'relative';
-  timelineTrack.style.minHeight = '100px'; // Changed to minHeight so it grows with logs
-  timelineTrack.style.marginTop = '10px';
-  timelineTrack.style.paddingLeft = '20px'; // Add padding so text doesn't hit the line
-  timelineTrack.style.borderLeft = '2px solid var(--border)';
-  timeline.appendChild(timelineTrack);
-
-  pulseLog.forEach(p => {
-    const marker = document.createElement('div');
-    marker.style.position = 'relative';
-    const offset = (p.time - sessionStartTimestamp) / 1000;
-  marker.style.marginTop = `${offset * 0.2}px`;
-    marker.style.cursor = 'pointer';
-    marker.innerHTML = `• ${new Date(p.time).toLocaleTimeString()} — ${p.answered ? '✔' : '✖'}`;
-    timelineTrack.appendChild(marker);
-  });
 
   $('resultsOverlay').style.display = 'flex';
 }
 
-$('closeStatsBtn').onclick = () => { tasks = []; current = null; sessionStartTimestamp = null; totalFocusedSeconds = 0; $('resultsOverlay').style.display = 'none'; render(); };
+$('closeStatsBtn').onclick = () => {
+  tasks = [];
+  current = null;
+  sessionStartTimestamp = null;
+  totalFocusedSeconds = 0;
+  completionInFlight = false;
+  $('focusCompleteWrap')?.classList.remove('focus-complete-firing');
+  $('resultsOverlay').style.display = 'none';
+  render();
+};
 
 render();
 </script>
@@ -593,3 +1248,6 @@ render();
 
 </body>
 </html>
+
+
+
