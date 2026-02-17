@@ -1,10 +1,12 @@
 {
-  "name": "Lock-In",
+  "name": "Lock-In Focus App",
   "short_name": "Lock-In",
-  "start_url": "./index.html",
+  "description":"Deep work session tracker with focus analytics.",
+  "scope": "./",
+  "start_url": "./",
   "display": "standalone",
-  "background_color": "#0b1220",
-  "theme_color": "#0b1220",
+  "background_color": "#111827",
+  "theme_color": "#22c55e",
   "orientation": "portrait",
   "icons": [
     {
