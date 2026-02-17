@@ -1,10 +1,10 @@
 {
-  "name": "lock-in-v2",
+  "name": "Lock-In",
   "short_name": "Lock-In",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#111827",
-  "theme_color": "#22c55e",
+  "background_color": "#0b1220",
+  "theme_color": "#0b1220",
   "orientation": "portrait",
   "icons": [
     {
