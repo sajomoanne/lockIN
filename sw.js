@@ -1,33 +1,39 @@
-self.addEventListener("install", e => {
-  e.waitUntil(
-    caches.open("lockin-cache").then(cache => {
-      return cache.addAll([
-        "./",
-        "./index.html",
-        "./manifest.json",
-        "./icon.png"
-      ])
-    })
-  )
-});
+const CACHE_NAME = "lockin-v5";
+const ASSETS = [
+  "./",
+  "./index.html",
+  "./styles.css",
+  "./app.js",
+  "./manifest.json",
+  "./icon.png"
+];
 
-self.addEventListener("fetch", e => {
-  e.respondWith(
-    fetch(e.request)
-      .then(res => {
-        const copy = res.clone();
-        caches.open("lockin-cache").then(cache => {
-          cache.put(e.request, copy);
-        });
-        return res;
-      })
-      .catch(() => caches.match(e.request))
+// Install
+self.addEventListener("install", event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(ASSETS))
+      .then(() => self.skipWaiting())
   );
 });
 
-self.addEventListener('notificationclick', event => {
-  event.notification.close();
+// Activate
+self.addEventListener("activate", event => {
   event.waitUntil(
-    clients.openWindow('./index.html')
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.filter(key => key !== CACHE_NAME)
+            .map(key => caches.delete(key))
+      )
+    ).then(() => self.clients.claim())
+  );
+});
+
+// Fetch
+self.addEventListener("fetch", event => {
+  event.respondWith(
+    caches.match(event.request).then(response => {
+      return response || fetch(event.request);
+    })
   );
 });
