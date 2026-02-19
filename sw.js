@@ -1,4 +1,4 @@
-const CACHE_NAME = "lockin-v5";
+const CACHE_NAME = "lockin-v6";
 const ASSETS = [
   "./",
   "./index.html",
@@ -8,32 +8,55 @@ const ASSETS = [
   "./icon.png"
 ];
 
-// Install
+// INSTALL — cache assets + activate immediately
 self.addEventListener("install", event => {
+  self.skipWaiting(); // activate immediately
+
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(ASSETS))
-      .then(() => self.skipWaiting())
   );
 });
 
-// Activate
+// ACTIVATE — clean old caches + take control immediately
 self.addEventListener("activate", event => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(
         keys.filter(key => key !== CACHE_NAME)
             .map(key => caches.delete(key))
-      )
-    ).then(() => self.clients.claim())
+      );
+
+      await self.clients.claim(); // force control of open pages
+    })()
   );
 });
 
-// Fetch
+// FETCH — cache-first strategy
 self.addEventListener("fetch", event => {
   event.respondWith(
     caches.match(event.request).then(response => {
       return response || fetch(event.request);
     })
+  );
+});
+
+// OPTIONAL BUT IMPORTANT — handle notification clicks
+self.addEventListener("notificationclick", event => {
+  event.notification.close();
+
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true })
+      .then(clientList => {
+        for (const client of clientList) {
+          if (client.url.includes("/") && "focus" in client) {
+            return client.focus();
+          }
+        }
+        if (clients.openWindow) {
+          return clients.openWindow("/");
+        }
+      })
   );
 });
