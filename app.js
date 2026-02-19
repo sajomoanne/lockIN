@@ -3,6 +3,10 @@ let tasks = [], current = null, paused = true, tick = null;
 let sessionStartTimestamp = null, sessionEndTimestamp = null;
 let totalFocusedSeconds = 0, editingIndex = null;
 let sessionActive = false, taskRunning = false;
+let sessionStartTime = null;
+let pausedDuration = 0;
+let lastPauseStart = null;
+let taskRunStartTime = null;
 
 // ==== PULSE SYSTEM STATE (ADDITIVE) ====
 let pulseTimer = null;
@@ -12,7 +16,6 @@ let activePulse = null;
 
 let pendingSessionEnd = false;
 
-let lastTickAt = null;
 let uiScreen = 'manage';
 let completionInFlight = false;
 const FOCUS_COMPLETE_ANIM_MS = 450;
@@ -35,10 +38,6 @@ const dragState = {
 };
 
 const $ = id => document.getElementById(id);
-
-if ("Notification" in window && Notification.permission !== "granted") {
-  Notification.requestPermission();
-}
 
 function setScreen(mode) {
   const focus = $('focusScreen');
@@ -397,40 +396,86 @@ $('endSessionBtn').onclick = () => {
 };
 $('confirmEndBtn').onclick = () => { closeConfirm(); endSession(); };
 
+function getElapsedTime() {
+  if (!sessionStartTime) return 0;
+  const now = Date.now();
+  const activePause = lastPauseStart ? (now - lastPauseStart) : 0;
+  return Math.max(0, now - sessionStartTime - pausedDuration - activePause);
+}
+
+function getCurrentTaskSpentSeconds() {
+  if (current === null || !tasks[current]) return 0;
+  const baseSeconds = tasks[current].spent || 0;
+  if (!taskRunning || paused || !taskRunStartTime) return baseSeconds;
+  return baseSeconds + Math.floor((Date.now() - taskRunStartTime) / 1000);
+}
+
+function formatDurationMs(ms) {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
+function commitCurrentTaskRun(atTime = Date.now()) {
+  if (current === null || !tasks[current] || !taskRunStartTime) return;
+  const deltaSeconds = Math.floor((atTime - taskRunStartTime) / 1000);
+  if (deltaSeconds > 0) {
+    tasks[current].spent += deltaSeconds;
+  }
+  taskRunStartTime = null;
+}
+
+function updateUIFromTimestamp() {
+  totalFocusedSeconds = Math.floor(getElapsedTime() / 1000);
+  if (current !== null && tasks[current]) {
+    const spentSeconds = getCurrentTaskSpentSeconds();
+    const remainingSeconds = Math.max(0, tasks[current].est - spentSeconds);
+    $('countdown').textContent = formatDurationMs(remainingSeconds * 1000);
+    $('stopwatch').textContent = formatDurationMs(spentSeconds * 1000);
+  } else {
+    $('countdown').textContent = '00:00:00';
+    $('stopwatch').textContent = '00:00:00';
+  }
+
+  $('focusStopwatchMain').textContent = focusStopwatchText();
+  $('focusRemainingSub').textContent = `remaining ${focusRemainingText()}`;
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    updateUIFromTimestamp();
+  }
+});
+
 function startTaskRun() {
   if (current === null || !tasks[current]) return;
   if (!paused) return;
+  const now = Date.now();
   sessionActive = true;
   taskRunning = true;
   paused = false;
   $('stateText').textContent = 'Running';
-  if (!sessionStartTimestamp) sessionStartTimestamp = Date.now();
+  if (!sessionStartTimestamp) sessionStartTimestamp = now;
+  if (!sessionStartTime) sessionStartTime = now;
+  if (lastPauseStart) {
+    pausedDuration += (now - lastPauseStart);
+    lastPauseStart = null;
+  }
+  taskRunStartTime = now;
 
   if (!tasks[current].log.length) {
-    tasks[current].log.push({ type: 'START', time: Date.now() });
+    tasks[current].log.push({ type: 'START', time: now });
   } else {
-    tasks[current].log.push({ type: 'RESUME', time: Date.now() });
+    tasks[current].log.push({ type: 'RESUME', time: now });
   }
-  lastTickAt = Date.now();
-  tick = setInterval(() => {
-    tasks[current].spent++;
-    totalFocusedSeconds++;
-    $('countdown').textContent = fmt(Math.max(0, tasks[current].est - tasks[current].spent));
-    $('stopwatch').textContent = fmt(tasks[current].spent);
-    const focusStop = $('focusStopwatchMain');
-    const focusRem = $('focusRemainingSub');
-    if (focusStop && taskRunning) {
-      focusStop.textContent = $('stopwatch').textContent;
-    }
-    if (focusRem) {
-      focusRem.textContent = `remaining ${$('countdown').textContent}`;
-    }
-  }, 1000);
+  if (tick) clearInterval(tick);
+  tick = setInterval(updateUIFromTimestamp, 1000);
+  updateUIFromTimestamp();
   startPulseScheduler();
   if (tasks[current].pauseStartedAt) {
-    tasks[current].pauses += Math.floor(
-      (Date.now() - tasks[current].pauseStartedAt) / 1000
-    );
+    tasks[current].pauses += Math.floor((now - tasks[current].pauseStartedAt) / 1000);
     tasks[current].pauseStartedAt = null;
   }
   render();
@@ -438,13 +483,20 @@ function startTaskRun() {
 
 function pauseTaskRun() {
   if (current === null || paused) return;
+  const now = Date.now();
   taskRunning = false;
   paused = true;
-  clearInterval(tick);
+  if (tick) {
+    clearInterval(tick);
+    tick = null;
+  }
+  commitCurrentTaskRun(now);
+  lastPauseStart = now;
   $('stateText').textContent = 'Paused';
-  tasks[current].log.push({ type: 'PAUSE', time: Date.now() });
-  tasks[current].pauseStartedAt = Date.now();
+  tasks[current].log.push({ type: 'PAUSE', time: now });
+  tasks[current].pauseStartedAt = now;
   clearPulseForTransition();
+  updateUIFromTimestamp();
   render();
 }
 
@@ -537,6 +589,22 @@ $('focusManageBtn').onclick = () => {
 
 /// FIRE PULSE FUNCTION ///
 
+function firePulseNotification() {
+  if (!("Notification" in window)) return;
+  if (!("serviceWorker" in navigator)) return;
+  if (Notification.permission === "granted") {
+    navigator.serviceWorker.getRegistration().then(reg => {
+      if (reg) {
+        reg.showNotification("Pulse Check", {
+          body: "Tap to confirm you're focused.",
+          icon: "icon.png",
+          badge: "icon.png"
+        });
+      }
+    });
+  }
+}
+
 function firePulse(task) {
   const now = Date.now();
 
@@ -573,19 +641,8 @@ function firePulse(task) {
   });
   pulseEntry.logIndex = task.log.length - 1;
 
-  // In-app pulse popup
-  if (document.visibilityState === 'visible') {
-    showPulsePopup(pulseEntry);
-  } else if ("Notification" in window && Notification.permission === "granted") {
-    navigator.serviceWorker.getRegistration().then(reg => {
-    if (reg) {
-      reg.showNotification("Lock-In Check", {
-        body: "You there?",
-        icon: "./icon-192.png"
-      });
-    }
-  });
-  }
+  showPulsePopup(pulseEntry);
+  firePulseNotification();
 
   lastPulseAt = now;
 
@@ -695,13 +752,13 @@ function failPulse(pulseEntry) {
 }
 
 function focusStopwatchText() {
-  if (current === null || !tasks[current]) return '00:00';
-  return $('stopwatch').textContent || fmt(tasks[current].spent);
+  if (current === null || !tasks[current]) return '00:00:00';
+  return formatDurationMs(getCurrentTaskSpentSeconds() * 1000);
 }
 
 function focusRemainingText() {
-  if (current === null || !tasks[current]) return '00:00';
-  return $('countdown').textContent || fmt(Math.max(0, tasks[current].est - tasks[current].spent));
+  if (current === null || !tasks[current]) return '00:00:00';
+  return formatDurationMs(Math.max(0, tasks[current].est - getCurrentTaskSpentSeconds()) * 1000);
 }
 
 function renderFocusStack() {
@@ -755,9 +812,15 @@ function completeTaskFlow() {
   if (current === null) return;
 
   if (!paused) {
+    const now = Date.now();
     taskRunning = false;
     paused = true;
-    clearInterval(tick);
+    if (tick) {
+      clearInterval(tick);
+      tick = null;
+    }
+    commitCurrentTaskRun(now);
+    lastPauseStart = now;
     $('stateText').textContent = 'Paused';
   }
 
@@ -896,13 +959,7 @@ function render() {
 
     list.appendChild(d);
   });
-  if (current !== null) {
-    $('countdown').textContent = fmt(Math.max(0, tasks[current].est - tasks[current].spent));
-    $('stopwatch').textContent = fmt(tasks[current].spent);
-  } else {
-    $('countdown').textContent = '00:00:00';
-    $('stopwatch').textContent = '00:00:00';
-  }
+  updateUIFromTimestamp();
   $('addWrapper').style.display = (paused || current === null) ? 'flex' : 'none';
   $('timerGrid').style.display = (current !== null) ? 'block' : 'none';
   $('endSessionBtn').disabled = !sessionStartTimestamp;
@@ -914,8 +971,6 @@ function render() {
   $('startBtn').style.opacity = current === null ? '0.45' : '1';
   $('startBtn').style.pointerEvents = current === null ? 'none' : 'auto';
   renderFocusStack();
-  $('focusStopwatchMain').textContent = focusStopwatchText();
-  $('focusRemainingSub').textContent = `remaining ${focusRemainingText()}`;
   renderFocusActions();
 }
 
@@ -1064,9 +1119,13 @@ $('startBtn').onclick = () => {
   sessionActive = true;
   taskRunning = false;
   paused = true;
-  clearInterval(tick);
+  if (tick) {
+    clearInterval(tick);
+    tick = null;
+  }
   resetPulseScheduler();
   $('stateText').textContent = 'Idle';
+  updateUIFromTimestamp();
   setScreen('focus');
   render();
 };
@@ -1082,16 +1141,24 @@ if ($('completeBtn')) {
 /// END SESSION FUNCTION ///
 
 function endSession() {
+  const endAt = Date.now();
   completionInFlight = false;
   completionPendingEndEntry = null;
   completionPendingEndTaskIndex = null;
   $('focusCompleteWrap')?.classList.remove('focus-complete-firing');
   clearPulseForTransition();
-  clearInterval(tick);
+  if (tick) {
+    clearInterval(tick);
+    tick = null;
+  }
+  if (taskRunning && !paused) {
+    commitCurrentTaskRun(endAt);
+  }
   paused = true;
   taskRunning = false;
   sessionActive = false;
-  sessionEndTimestamp = Date.now();
+  sessionEndTimestamp = endAt;
+  totalFocusedSeconds = Math.floor(getElapsedTime() / 1000);
   if (!sessionStartTimestamp) sessionStartTimestamp = sessionEndTimestamp;
   const total = Math.floor((sessionEndTimestamp - sessionStartTimestamp) / 1000);
   const ratio = total > 0 ? Math.round((totalFocusedSeconds / total) * 100) : 0;
@@ -1125,6 +1192,10 @@ $('closeStatsBtn').onclick = () => {
   tasks = [];
   current = null;
   sessionStartTimestamp = null;
+  sessionStartTime = null;
+  pausedDuration = 0;
+  lastPauseStart = null;
+  taskRunStartTime = null;
   totalFocusedSeconds = 0;
   sessionActive = false;
   taskRunning = false;
@@ -1143,7 +1214,14 @@ render();
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./sw.js")
-      .then(reg => console.log("SW registered"))
+      .then(reg => {
+        console.log("SW registered");
+        if ("Notification" in window && Notification.permission !== "granted") {
+          console.log("Notification perms requested")
+          Notification.requestPermission();
+        }
+        return reg;
+      })
       .catch(err => console.log("SW failed", err));
   });
 }
